@@ -1,0 +1,28 @@
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,                       -- Auto ID
+    voucher_type VARCHAR(50) NOT NULL,           -- e.g. SALES, PURCHASE
+    order_no VARCHAR(50) NOT NULL UNIQUE,        -- Order number
+    status VARCHAR(20) DEFAULT 'pending',        -- pending, approved, rejected
+    order_date DATE NOT NULL,                    -- Order date
+
+    customer_code VARCHAR(50) NOT NULL,          -- Customer code
+    customer_name VARCHAR(255) NOT NULL,         -- Customer name
+    executive VARCHAR(100),                      -- Sales executive
+
+    item_code VARCHAR(50) NOT NULL,              -- Item code
+    item_name VARCHAR(255) NOT NULL,             -- Item name
+    hsn VARCHAR(20),                             -- HSN code
+    gst DECIMAL(5,2),                            -- GST % (e.g., 18.00)
+
+    quantity DECIMAL(10,2) NOT NULL,             -- Quantity
+    rate DECIMAL(12,2) NOT NULL,                 -- Rate per unit
+    amount DECIMAL(14,2) GENERATED ALWAYS AS (quantity * rate) STORED, -- Auto amount
+    disc_percentage INT NOT NULL,
+    disc_amount DECIMAL(12, 2),
+    spl_disc_percentage INT NOT NULL,
+    spl_disc_amount DECIMAL(12, 2),
+    net_rate DECIMAL(12,2),                      -- Net rate after discounts if any
+    gross_amount DECIMAL(14,2),                  -- Final gross amount (taxes included)
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

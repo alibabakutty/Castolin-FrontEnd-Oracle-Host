@@ -720,7 +720,7 @@ const handleSplDiscChange = (index, value) => {
             type="name"
             readOnly
             required
-            value={customerName?.customer_name || ''}
+            value={customerName?.customer_name || 'Select Customer'}
             className="peer w-full border border-[#932F67] rounded p-[3.5px] focus:outline-none focus:border-[#932F67] text-sm font-medium"
           />
           <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
@@ -763,7 +763,7 @@ const handleSplDiscChange = (index, value) => {
           {/* Item Code */}
           <div className="relative w-32">
             <div className="border px-[3px] py-1.5 rounded-[5px] border-[#932F67] text-sm font-medium text-center w-full bg-[#E9EFEC]">
-              {item?.item_code || 'Item-1001'}
+              {item?.item_code || 'Select Item'}
             </div>
             <span className="absolute left-2.5 top-[10px] transition-all text-[12px] -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1 rounded font-semibold leading-2">
               Item Code *
@@ -832,7 +832,7 @@ const handleSplDiscChange = (index, value) => {
           {!isViewOnlyReport && (
             <>
               <div className="flex items-center">
-            <span className="text-sm font-medium mr-2">Quantity * :</span>
+            <span className="text-sm font-medium mr-2">Qty * :</span>
             <input
               type="text"
               name="qty"

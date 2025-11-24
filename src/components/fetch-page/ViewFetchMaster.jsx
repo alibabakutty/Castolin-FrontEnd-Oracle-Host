@@ -62,7 +62,7 @@ const ViewFetchMaster = () => {
       },
     },
     corporate: {
-      title: 'Corporates',
+      title: 'Direct Orders',
       apiEndpoint: '/corporates',
       searchPlaceholder: 'Search by Name, email or role...',
       itemName: 'corporates',
@@ -81,7 +81,7 @@ const ViewFetchMaster = () => {
     inventory: 'Inventories',
     customer: 'Customers',
     distributor: 'Distributors',
-    corporate: 'Corporates',
+    corporate: 'Direct Orders',
   };
 
   // Get current module configuration

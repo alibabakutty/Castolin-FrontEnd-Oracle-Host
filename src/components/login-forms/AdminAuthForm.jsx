@@ -147,50 +147,7 @@ const AdminAuthForm = () => {
               {isLogin ? "Welcome back!" : "Create your account"}
             </p>
           </div>
-
-          {/* Credentials History Dropdown (only for login) */}
-          {isLogin && credentialsHistory.length > 0 && (
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => setShowCredentialsHistory(!showCredentialsHistory)}
-                className="w-full text-left p-2 bg-white/5 border border-white/20 rounded-lg text-white/80 text-sm hover:bg-white/10 transition-colors font-amasis"
-              >
-                <div className="flex items-center justify-between">
-                  <span>📋 Show previous credentials ({credentialsHistory.length})</span>
-                  <span>{showCredentialsHistory ? '▲' : '▼'}</span>
-                </div>
-              </button>
-
-              {showCredentialsHistory && (
-                <div className="space-y-2 max-h-40 overflow-y-auto font-amasis">
-                  {credentialsHistory.map((credential, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => useCredential(credential)}
-                        className="flex-1 text-left text-white/80 text-sm hover:text-white transition-colors"
-                      >
-                        <div className="font-medium">{credential.email}</div>
-                        <div className="text-xs text-white/60">••••••••</div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCredential(credential.email)}
-                        className="p-1 text-white/50 hover:text-red-400 transition-colors"
-                        title="Remove from history"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          
 
           {/* Form Fields */}
           <div className="space-y-3">
@@ -308,20 +265,6 @@ const AdminAuthForm = () => {
                 isLogin ? "Login" : "Sign Up"
               )}
             </button>
-
-            <div className="text-center">
-              <p className="text-white/70 text-xs">
-                {isLogin ? "No account? " : "Have account? "}
-                <button
-                  type="button"
-                  onClick={toggleMode}
-                  className="text-blue-300 hover:text-blue-200 font-semibold"
-                  disabled={isLoading}
-                >
-                  {isLogin ? "Sign Up" : "Login"}
-                </button>
-              </p>
-            </div>
           </div>
         </form>
       </div>

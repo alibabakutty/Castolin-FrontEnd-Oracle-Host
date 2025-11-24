@@ -480,8 +480,8 @@ const Order = ({ onBack }) => {
   };
 
   return (
-    <div className="font-poppins p-3 bg-[#E9EFEC] border-2 h-screen font-amasis">
-      <div className="py px-1 py-3 flex justify-between border items-center transition-all">
+    <div className="p-3 bg-[#E9EFEC] border-2 h-screen font-amasis">
+      <div className="px-1 py-2 grid  grid-cols-[auto_1fr_1fr_0.8fr_2fr_1.2fr_1.2fr] gap-2 items-center border transition-all">
         {/* Back Arrow */}
         <button
           onClick={onBack}
@@ -490,7 +490,7 @@ const Order = ({ onBack }) => {
           <AiOutlineArrowLeft className="text-[#932F67]" size={22} />
         </button>
 
-        <div className=" flex items-center relative -ml-8">
+        <div className="relative">
           <input
             type="text"
             required
@@ -513,7 +513,7 @@ const Order = ({ onBack }) => {
           </span>
         </div>
 
-        <div className=" flex items-center relative -ml-5">
+        <div className="relative">
           <input
             type="text"
             required
@@ -530,29 +530,29 @@ const Order = ({ onBack }) => {
           </span>
         </div>
 
-        {/* <div className=" text-right">Customer Code: C1012</div> */}
-        <div className="relative w-30 -ml-8">
-          <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium">
-            {customerName ? customerName.customer_code : 'CUS-001'}
-          </div>
-          <span
-            className="absolute left-2.5 top-[10px] transition-all text-[12px]
-               -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
-          >
-            Customer Code *
-          </span>
-        </div>
-
-        <div className="relative w-64 -ml-8">
+        {/* Customer Code Selection Field */}
+        <div className="relative w-[116px]">
           <Select
             ref={customerSelectRef}
             className="text-sm peer"
-            value={customerName}
-            options={customerOptions}
-            getOptionLabel={e => `${e.customer_name}`}
-            getOptionValue={e => `${e.customer_code}`}
+            value={
+              customerName
+                ? {
+                    customer_code: customerName.customer_code,
+                    customer_name: customerName.customer_name,
+                    // Create a display label for the selected value
+                    label: customerName.customer_code,
+                  }
+                : null
+            }
+            options={customerOptions.map(customer => ({
+              ...customer,
+              label: `${customer.customer_code} - ${customer.customer_name}`, // Show in dropdown
+            }))}
+            getOptionLabel={e => e.label} // Use the custom label for dropdown
+            getOptionValue={e => e.customer_code} // Store only the code
             onChange={handleCustomerSelect}
-            placeholder="Select customer...."
+            placeholder=""
             components={{
               DropdownIndicator: () => null,
               IndicatorSeparator: () => null,
@@ -573,21 +573,28 @@ const Order = ({ onBack }) => {
               singleValue: base => ({
                 ...base,
                 lineHeight: '1',
+                // Ensure only code is displayed in the input
+                '& > div': {
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                },
               }),
               option: (base, state) => ({
                 ...base,
                 fontFamily: 'font-amasis',
                 fontWeight: '600',
-                padding: '2px 4px',
+                padding: '4px 24px',
                 lineHeight: '1.2',
                 backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
                 color: '#555',
                 cursor: 'pointer',
+                fontSize: '14px',
               }),
               menu: base => ({
                 ...base,
-                width: '130%',
-                minWidth: '120px',
+                width: '500px',
+                minWidth: '500px',
                 left: '0px',
                 right: 'auto',
                 position: 'absolute',
@@ -600,13 +607,44 @@ const Order = ({ onBack }) => {
               }),
             }}
             menuPortalTarget={document.body}
+            formatOptionLabel={(option, { context }) => {
+              // In dropdown, show "code - name"
+              if (context === 'menu') {
+                return `${option.customer_code} - ${option.customer_name}`;
+              }
+              // In selected value, show only code
+              return option.customer_code;
+            }}
           />
           <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
-            Name *
+            Customer Code *
+          </span>
+        </div>
+
+        {/* Customer Name (Read-only) */}
+        <div className="relative ml-7 w-96">
+          <input
+            type="text"
+            readOnly
+            value={customerName ? customerName.customer_name : ''}
+            className="outline-none border rounded-[5px] border-[#932F67] p-[3.5px] text-sm bg-gray-100 font-medium w-full"
+            placeholder=""
+          />
+          <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] leading-2 rounded">
+            Customer Name *
           </span>
         </div>
 
         <div className="relative">
+          <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium text-gray-700 text-center">
+            {user.username.toUpperCase() || 'executive'}
+          </div>
+          <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
+            Executive Name *
+          </span>
+        </div>
+
+        <div className="relative w-28">
           <input
             type="date"
             readOnly
@@ -630,27 +668,20 @@ const Order = ({ onBack }) => {
       {/* Body Part */}
       <div className="mt-1 border h-[87vh]">
         <div className="flex p-1 h-16 items-center gap-4">
-          {/* Item Code */}
+          {/* Item Code Selection */}
           <div className="relative w-32">
-            <div className="border px-[3px] py-1.5 rounded-[5px] border-[#932F67] text-sm font-medium text-center w-full bg-[#E9EFEC]">
-              {item?.item_code || 'Item-1001'}
-            </div>
-            <span className="absolute left-2.5 top-[10px] transition-all text-[12px] -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1 rounded font-semibold leading-2">
-              Item Code *
-            </span>
-          </div>
-
-          {/* Item Name */}
-          <div className="relative w-[450px]">
             <Select
               ref={itemSelectRef}
               className="text-sm peer"
-              value={item}
-              options={itemOptions}
-              getOptionLabel={e => e.stock_item_name}
+              value={item ? {item_code: item.item_code, item_name: item.stock_item_name, label: item.item_code} : null}
+              options={itemOptions.map(item => ({
+                ...item,
+                label: `${item.item_code} - ${item.stock_item_name}`,
+              }))}
+              getOptionLabel={e => e.label}
               getOptionValue={e => e.item_code}
               onChange={handleItemSelect}
-              placeholder="Select Product Name..."
+              placeholder=""
               components={{
                 DropdownIndicator: () => null,
                 IndicatorsContainer: () => null,
@@ -676,20 +707,22 @@ const Order = ({ onBack }) => {
                   ...base,
                   textAlign: 'center',
                   color: '#777',
+                  fontSize: '12px',
                 }),
                 option: (base, state) => ({
                   ...base,
                   fontFamily: 'font-amasis',
                   fontWeight: '600',
-                  padding: '2px 4px',
+                  padding: '4px 24px',
                   lineHeight: '1.2',
                   backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
                   color: '#555',
                   cursor: 'pointer',
+                  fontSize: '14px',
                 }),
                 menu: base => ({
                   ...base,
-                  width: '130%',
+                  width: '550px',
                   minWidth: '120px',
                   zIndex: 9999,
                 }),
@@ -701,12 +734,62 @@ const Order = ({ onBack }) => {
               menuPortalTarget={document.body}
             />
             <span className="absolute left-2.5 top-[10px] transition-all text-[12px] -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1 rounded font-semibold leading-2">
+              Item Code *
+            </span>
+          </div>
+
+          {/* Item Name (Read-only) */}
+          <div className="relative w-[450px]">
+            <input
+              type="text"
+              readOnly
+              value={item ? item.stock_item_name : ''}
+              className="outline-none border rounded-[5px] border-[#932F67] p-[3.5px] text-sm bg-gray-100 font-medium w-full"
+              placeholder=""
+            />
+            <span className="absolute left-2.5 top-[10px] transition-all text-[12px] -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1 rounded font-semibold leading-2">
               Item Name *
             </span>
           </div>
 
+          <div className="relative">
+            <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium">
+              {'Select Delivery Date'}
+            </div>
+            <span
+              className="absolute left-2.5 top-[10px] transition-all text-[12px]
+               -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+            >
+              Delivery Date *
+            </span>
+          </div>
+
+          <div className="relative">
+            <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium">
+              {'Select Delivery Mode'}
+            </div>
+            <span
+              className="absolute left-2.5 top-[10px] transition-all text-[12px]
+               -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+            >
+              Delivery Mode *
+            </span>
+          </div>
+
+          <div className="relative">
+            <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium">
+              {'Select Transporter Name'}
+            </div>
+            <span
+              className="absolute left-2.5 top-[10px] transition-all text-[12px]
+               -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+            >
+              Transporter Name *
+            </span>
+          </div>
+
           <div className="flex items-center ml-5">
-            <span className="text-sm mr-2 font-medium">Quantity * :</span>
+            <span className="text-sm mr-2 font-medium">Qty * :</span>
             <input
               type="number"
               name="qty"
@@ -721,7 +804,8 @@ const Order = ({ onBack }) => {
               autoComplete="off"
             />
           </div>
-          <div>
+
+          <div className="flex justify-end">
             <input
               type="button"
               ref={buttonRef}
@@ -730,16 +814,174 @@ const Order = ({ onBack }) => {
               className="bg-[#693382] text-white px-4 rounded-[6px] py-1 outline-none cursor-pointer"
             />
           </div>
+        </div>
 
-          <div className="relative w-44 ml-20">
-            <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium text-gray-700 text-center">
-              {user.username.toUpperCase() || 'executive'}
-            </div>
-            <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
-              Executive Name *
-            </span>
+        {/* Table section */}
+        <div className="h-[70vh] flex flex-col">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#A2AADB] leading-3">
+                <th className="font-medium text-sm border border-gray-300 py-0.5 w-10 text-center">
+                  S.No
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-28">
+                  Product Code
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[400px] text-center">
+                  Product Name
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 text-center w-20">
+                  HSN
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-1 w-14 text-center">
+                  GST %
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-center w-12">
+                  Qty
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 w-10">UOM</th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-[85px]">
+                  Rate
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 w-[86px]">
+                  Amount
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 pr-1 w-[94px]">
+                  Net Amount
+                </th>
+                <th className="font-medium border text-sm border-gray-300 py-0.5 text-center w-[105px]">
+                  Gross Amount
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-center w-[76px]">
+                  Action
+                </th>
+              </tr>
+            </thead>
+          </table>
+
+          {/* Scrollable table body container */}
+          <div className={`flex-1 overflow-y-auto ${orderData.length > 15 ? 'max-h-[65vh]' : ''}`}>
+            <table className="w-full">
+              <tbody>
+                {orderData.length === 0 ? (
+                  <tr>
+                    <td colSpan={12} className="text-center border border-gray-300">
+                      <div className="flex items-center justify-center p-5">
+                        <AiFillExclamationCircle className="text-red-700 text-[28px] mx-1" />
+                        No Records Found...
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  orderData.map((item, index) => (
+                    <tr key={index} className="leading-12">
+                      <td className="border border-gray-400 text-center text-sm w-[43.5px]">
+                        {index + 1}
+                      </td>
+                      <td className="border border-gray-400 text-left pl-1 text-sm w-[122px]">
+                        {item.itemCode}
+                      </td>
+                      <td className="border border-gray-400 px-2 text-sm w-[437px]">
+                        {item.itemName}
+                      </td>
+                      <td className="border border-gray-400 text-center text-sm w-[87px]">{item.hsn}</td>
+                      <td className="border border-gray-400 text-center text-sm w-[62px]">
+                        {item.gst}
+                      </td>
+                      <td className="border border-gray-400 px-2 text-right text-sm bg-[#F8F4EC] w-[52px]">
+                        <input
+                          type="text"
+                          value={item.itemQty === 0 ? '' : item.itemQty}
+                          onChange={e => {
+                            const value = e.target.value.replace(/[^\d]/g, '');
+                            handleQuantityChange(index, value);
+                          }}
+                          onBlur={e => {
+                            if (e.target.value === '') {
+                              handleQuantityChange(index, '1');
+                            }
+                          }}
+                          className="w-[20px] text-right border-none outline-none bg-transparent px-1"
+                        />
+                      </td>
+                      <td className="border border-gray-400 text-center text-sm w-[44px]">
+                        {item.uom}
+                      </td>
+                      <td className="border border-gray-400  px-2 text-right text-sm w-[93px]">
+                        {formatCurrency(item.rate)}
+                      </td>
+                      <td className="border border-gray-400 px-2 text-right text-sm w-[94px]">
+                        {formatCurrency(item.amount)}
+                      </td>
+                      <td className="border border-gray-400 px-2 text-right text-sm w-[102px]">
+                        {formatCurrency(item.netRate)}
+                      </td>
+                      <td className="border border-gray-400 px-2 text-right text-sm w-[115px]">
+                        {formatCurrency(item.grossAmount)}
+                      </td>
+                      <td className="border border-gray-400 text-center text-sm">
+                        <button
+                          onClick={() => handleRemoveItem(index)}
+                          className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-          <div className="flex w-44 justify-end">
+        </div>
+
+        {/* Footer section - remove the mt-[320px] */}
+        <div className="h-[7vh] flex border-t items-center">
+          <div className="w-2/4 px-0.5">
+            <div className="relative flex gap-2">
+              <textarea
+                name="remarks"
+                id="remarks"
+                placeholder="Remarks"
+                value={remarks}
+                onChange={e => setRemarks(e.target.value)}
+                className="border border-[#932F67] resize-none md:w-[400px] outline-none rounded px-1  peer h-[26px] bg-[#F8F4EC] mb-1 ml-1"
+              ></textarea>
+
+              <div>
+                <label htmlFor="" className="text-sm font-medium ml-3">
+                  Status :{' '}
+                </label>
+                <select
+                  name=""
+                  id=""
+                  disabled={true}
+                  className="outline-none appearance-none border border-[#932F67] px-1 text-sm rounded ml-1 mt-0.5"
+                >
+                  <option value="">Pending</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p className="font-medium pr-2 mb-0.5">Total</p>
+          </div>
+          <div className="w-[550px] px-0.5 py-1">
+            <table className="w-full border-b mb-1">
+              <tfoot>
+                <tr className="*:border-[#932F67]">
+                  <td className="text-right border w-16 px-1">
+                    {formatQuantityForDisplay(totals.qty)}
+                  </td>
+                  <td className="w-32 border"></td>
+                  <td className="text-right border w-28 px-1">{formatCurrency(totals.amount)}</td>
+                  <td className="text-right border w-24 px-1"></td>
+                  <td className="text-right border w-28 px-1">{formatCurrency(totals.grossAmt)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div className=" mb-1 ml-0.5">
             <button
               onClick={handleSubmit}
               className="bg-[#693382] text-white px-4 rounded-[6px] py-0.5 outline-none cursor-pointer"
@@ -748,164 +990,6 @@ const Order = ({ onBack }) => {
             </button>
           </div>
         </div>
-
-        {/* Table section */}
-<div className="h-[70vh] flex flex-col">
-  <table className="w-full">
-    <thead>
-      <tr className="bg-[#A2AADB] leading-3">
-        <th className="font-medium text-sm border border-gray-300 py-0.5 w-10 text-center">
-          S.No
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-28">
-          Product Code
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[400px] text-center">
-          Product Name
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 text-center w-20">
-          HSN
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 px-1 w-14 text-center">
-          GST %
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-center w-12">
-          Qty
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 w-10">UOM</th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-[85px]">
-          Rate
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 w-[86px]">
-          Amount
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 pr-1 w-[94px]">
-          Net Amount
-        </th>
-        <th className="font-medium border text-sm border-gray-300 py-0.5 text-center w-[105px]">
-          Gross Amount
-        </th>
-        <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-center w-[76px]">
-          Action
-        </th>
-      </tr>
-    </thead>
-  </table>
-  
-  {/* Scrollable table body container */}
-  <div className={`flex-1 overflow-y-auto ${orderData.length > 15 ? 'max-h-[65vh]' : ''}`}>
-    <table className="w-full">
-      <tbody>
-        {orderData.length === 0 ? (
-          <tr>
-            <td colSpan={12} className="text-center border border-gray-300">
-              <div className="flex items-center justify-center p-5">
-                <AiFillExclamationCircle className="text-red-700 text-[28px] mx-1" />
-                No Records Found...
-              </div>
-            </td>
-          </tr>
-        ) : (
-          orderData.map((item, index) => (
-            <tr key={index} className="leading-12">
-              <td className="border border-gray-400 text-center text-sm w-[40px]">{index + 1}</td>
-              <td className="border border-gray-400 text-center text-sm">{item.itemCode}</td>
-              <td className="border border-gray-400 px-2 text-sm w-[450px]">{item.itemName}</td>
-              <td className="border border-gray-400 text-center text-sm">{item.hsn}</td>
-              <td className="border border-gray-400 text-center text-sm w-[50px]">{item.gst}</td>
-              <td className="border border-gray-400 px-2 text-right text-sm bg-[#F8F4EC]">
-                <input
-                  type="text"
-                  value={item.itemQty === 0 ? '' : item.itemQty}
-                  onChange={e => {
-                    const value = e.target.value.replace(/[^\d]/g, '');
-                    handleQuantityChange(index, value);
-                  }}
-                  onBlur={e => {
-                    if (e.target.value === '') {
-                      handleQuantityChange(index, '1');
-                    }
-                  }}
-                  className="w-[20px] text-right border-none outline-none bg-transparent px-1"
-                />
-              </td>
-              <td className="border border-gray-400 text-center text-sm w-[50px]">{item.uom}</td>
-              <td className="border border-gray-400  px-2 text-right text-sm">
-                {formatCurrency(item.rate)}
-              </td>
-              <td className="border border-gray-400 px-2 text-right text-sm">
-                {formatCurrency(item.amount)}
-              </td>
-              <td className="border border-gray-400 px-2 text-right text-sm w-[100px]">
-                {formatCurrency(item.netRate)}
-              </td>
-              <td className="border border-gray-400 px-2 text-right text-sm w-[117px]">
-                {formatCurrency(item.grossAmount)}
-              </td>
-              <td className="border border-gray-400 text-center text-sm">
-                <button
-                  onClick={() => handleRemoveItem(index)}
-                  className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                >
-                  Remove
-                </button>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-{/* Footer section - remove the mt-[320px] */}
-<div className="h-[7vh] flex border-t items-center">
-  <div className="w-2/4 px-0.5">
-    <div className="relative flex gap-2">
-      <textarea
-        name="remarks"
-        id="remarks"
-        placeholder="Remarks"
-        value={remarks}
-        onChange={e => setRemarks(e.target.value)}
-        className="border border-[#932F67] resize-none md:w-[400px] outline-none rounded px-1  peer h-[26px] bg-[#F8F4EC] mb-1 ml-1"
-      ></textarea>
-
-      <div>
-        <label htmlFor="" className="text-sm font-medium ml-3">
-          Status :{' '}
-        </label>
-        <select
-          name=""
-          id=""
-          disabled={true}
-          className="outline-none appearance-none border border-[#932F67] px-1 text-sm rounded ml-1 mt-0.5"
-        >
-          <option value="">Pending</option>
-        </select>
-      </div>
-    </div>
-  </div>
-  <div>
-    <p className="font-medium pr-2 mb-0.5">Total</p>
-  </div>
-  <div className="w-[550px] px-0.5 py-1">
-    <table className="w-full border-b mb-1">
-      <tfoot>
-        <tr className="*:border-[#932F67]">
-          <td className="text-right border w-16 px-1">
-            {formatQuantityForDisplay(totals.qty)}
-          </td>
-          <td className="w-32 border"></td>
-          <td className="text-right border w-28 px-1">{formatCurrency(totals.amount)}</td>
-          <td className="text-right border w-24 px-1"></td>
-          <td className="text-right border w-28 px-1">{formatCurrency(totals.grossAmt)}</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</div>
-
       </div>
     </div>
   );

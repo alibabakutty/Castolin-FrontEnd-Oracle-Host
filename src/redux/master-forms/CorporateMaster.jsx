@@ -155,7 +155,7 @@ const CorporateMaster = () => {
       <form action="" onSubmit={handleSubmit} className="w-[25%] h-[20vh] ml-[68px] bg-[#FBFBFB]">
         <div className="text-[13px] flex mt-2 ml-2 leading-4">
           <label htmlFor="username" className="w-[34%]">
-            Corporate Name
+            Direct Order Name
           </label>
           <span>:</span>
           <input

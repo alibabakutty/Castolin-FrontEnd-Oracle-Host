@@ -12,8 +12,14 @@ const Order = ({ onBack }) => {
   const [customerName, setCustomerName] = useState(null);
   const [quantity, setQuantity] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryMode, setDeliveryMode] = useState('');
+  const [transporterName, setTransporterName] = useState('');
   const itemSelectRef = useRef(null);
   const customerSelectRef = useRef(null);
+  const deliveryDateRef = useRef(null);
+  const deliveryModeRef = useRef(null);
+  const transporterNameRef = useRef(null);
   const quantityInputRef = useRef(null);
   const buttonRef = useRef(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -28,6 +34,8 @@ const Order = ({ onBack }) => {
   const { user } = useAuth();
 
   const location = useLocation();
+
+  const isDistributorRoute = location.pathname.includes('/distributor');
 
   useEffect(() => {
     const handleKeyDown = e => {
@@ -147,7 +155,17 @@ const Order = ({ onBack }) => {
 
   const handleItemSelect = selected => {
     setItem(selected);
-    quantityInputRef.current.focus();
+    deliveryDateRef.current.focus();
+  };
+
+  // Add this function for field navigation
+  const handleFieldKeyDown = (e, nextFieldRef) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextFieldRef && nextFieldRef.current) {
+        nextFieldRef.current.focus();
+      }
+    }
   };
 
   const handleCustomerSelect = selected => {
@@ -156,53 +174,34 @@ const Order = ({ onBack }) => {
     itemSelectRef.current.focus();
   };
 
-  const handleKeyDown = e => {
-    if (quantityInputRef.current.value !== '' && e.key === 'Enter') {
-      e.preventDefault();
-      buttonRef.current.focus();
-    }
-  };
-
   const handleClick = () => {
     if (!item || !quantity) return;
 
-    const existingIndex = orderData.findIndex(pro => pro.itemCode === item.item_code);
+    const newRow = {
+      itemCode: item.item_code,
+      itemName: item.stock_item_name,
+      hsn: item.hsn_code || item.hsn,
+      gst: item.gst,
+      delivery_date: deliveryDate,
+      delivery_mode: deliveryMode,
+      transporter_name: transporterName,
+      itemQty: Number(quantity),
+      uom: item.uom || "No's",
+      rate: Number(item.rate),
+      amount: Number(item.rate) * Number(quantity),
+      netRate: Number(item.rate),
+      grossAmount: Number(item.rate) * Number(quantity),
+    };
+    setOrderData(prev => [...prev, newRow]);
+    toast.info('Item added successfully!', {
+      position: 'bottom-right',
+      autoClose: 3000,
+    });
 
-    if (existingIndex !== -1) {
-      const updatedRows = [...orderData];
-      updatedRows[existingIndex].itemQty =
-        Number(updatedRows[existingIndex].itemQty) + Number(quantity);
-
-      updatedRows[existingIndex].amount =
-        Number(updatedRows[existingIndex].itemQty) * Number(updatedRows[existingIndex].rate);
-      updatedRows[existingIndex].grossAmt =
-        Number(updatedRows[existingIndex].itemQty) * Number(updatedRows[existingIndex].rate);
-
-      setOrderData(updatedRows);
-      toast.warning('Item already exists, added with previous quantity!', {
-        position: 'bottom-right',
-        autoClose: 3000,
-      });
-    } else {
-      const newRow = {
-        itemCode: item.item_code,
-        itemName: item.stock_item_name,
-        hsn: item.hsn_code || item.hsn,
-        gst: item.gst,
-        itemQty: Number(quantity),
-        uom: item.uom || "No's",
-        rate: Number(item.rate),
-        amount: Number(item.rate) * Number(quantity),
-        netRate: Number(item.rate),
-        grossAmount: Number(item.rate) * Number(quantity),
-      };
-      setOrderData(prev => [...prev, newRow]);
-      toast.info('Item added successfully!', {
-        position: 'bottom-right',
-        autoClose: 3000,
-      });
-    }
     setItem('');
+    setDeliveryDate('');
+    setDeliveryMode('');
+    setTransporterName('');
     setQuantity('');
     itemSelectRef.current.focus();
   };
@@ -247,6 +246,21 @@ const Order = ({ onBack }) => {
     });
   };
 
+  const handleDeliveryDateChange = selectedDate => {
+    if (selectedDate < date) {
+      toast.error(
+        'Delivery date cannot be before order date! Please select today or a future date.',
+        {
+          position: 'bottom-right',
+          autoClose: 4000,
+        },
+      );
+      setDeliveryDate(''); // Clear the invalid date
+    } else {
+      setDeliveryDate(selectedDate);
+    }
+  };
+
   const postOrder = async () => {
     if (isSubmitttingRef.current) return; // Prevent multiple submissions
 
@@ -282,7 +296,7 @@ const Order = ({ onBack }) => {
   const handleSubmit = e => {
     e.preventDefault();
 
-    if (!customerName) {
+    if (!isDistributorRoute && !customerName) {
       toast.error('Please select a customer name.', {
         position: 'bottom-right',
         autoClose: 3000,
@@ -304,19 +318,34 @@ const Order = ({ onBack }) => {
       };
 
       const voucherType = getVoucherType();
+       // ✅ Handle customer data based on route
+      const customerData = isDistributorRoute 
+        ? {
+            customer_code: user?.usercode || 'DISTRIBUTOR',
+            customer_name: user?.username || 'Distributor User'
+          }
+        : {
+            customer_code: customerName?.customer_code || '',
+            customer_name: customerName?.customer_name || ''
+          };
+
       const dbd = orderData.map(item => ({
         voucher_type: voucherType,
         order_no: orderNumber,
         date,
         status: 'pending',
+        executiveCode: user.usercode || '',
         executive: user.username || '',
         role: user.role || '',
-        customer_code: customerName.customer_code || '',
-        customer_name: customerName.customer_name || '',
+        customer_code: customerData.customer_code,
+        customer_name: customerData.customer_name,
         item_code: item.itemCode,
         item_name: item.itemName,
         hsn: item.hsn_code || item.hsn,
         gst: Number(String(item.gst).replace('%', '').trim()),
+        delivery_date: item.delivery_date,
+        delivery_mode: item.delivery_mode,
+        transporter_name: item.transporter_name,
         quantity: item.itemQty,
         uom: item.uom,
         rate: item.rate,
@@ -353,6 +382,9 @@ const Order = ({ onBack }) => {
   const resetFormFields = () => {
     setCustomerName(null);
     setItem(null);
+    setDeliveryDate('');
+    setDeliveryMode('');
+    setTransporterName('');
     setQuantity('');
     setRemarks('');
 
@@ -390,13 +422,6 @@ const Order = ({ onBack }) => {
       grossAmt: totalGrossAmt,
     });
   }, [orderData]);
-
-  const numberFormat = num => {
-    return Number(num || 0).toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
 
   const formatCurrency = value => {
     return new Intl.NumberFormat('en-IN', {
@@ -524,116 +549,131 @@ const Order = ({ onBack }) => {
         </div>
 
         {/* Customer Code Selection Field */}
-        <div className="relative w-[116px]">
-          <Select
-            ref={customerSelectRef}
-            className="text-sm peer"
-            value={
-              customerName
-                ? {
-                    customer_code: customerName.customer_code,
-                    customer_name: customerName.customer_name,
-                    // Create a display label for the selected value
-                    label: customerName.customer_code,
-                  }
-                : null
-            }
-            options={customerOptions.map(customer => ({
-              ...customer,
-              label: `${customer.customer_code} - ${customer.customer_name}`, // Show in dropdown
-            }))}
-            getOptionLabel={e => e.label} // Use the custom label for dropdown
-            getOptionValue={e => e.customer_code} // Store only the code
-            onChange={handleCustomerSelect}
-            placeholder=""
-            components={{
-              DropdownIndicator: () => null,
-              IndicatorSeparator: () => null,
-            }}
-            styles={{
-              ...customStyles,
-              control: base => ({
-                ...base,
-                minHeight: '30px',
-                height: '30px',
-                lineHeight: '1',
-                padding: '0px 1px',
-                width: '120%',
-                backgroundColor: '#F8F4EC',
-                borderColor: '#932F67',
-                boxShadow: 'none',
-              }),
-              singleValue: base => ({
-                ...base,
-                lineHeight: '1',
-                // Ensure only code is displayed in the input
-                '& > div': {
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                },
-              }),
-              option: (base, state) => ({
-                ...base,
-                fontFamily: 'font-amasis',
-                fontWeight: '600',
-                padding: '4px 24px',
-                lineHeight: '1.2',
-                backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
-                color: '#555',
-                cursor: 'pointer',
-                fontSize: '14px',
-              }),
-              menu: base => ({
-                ...base,
-                width: '500px',
-                minWidth: '500px',
-                left: '0px',
-                right: 'auto',
-                position: 'absolute',
-                zIndex: 9999,
-              }),
-              menuList: base => ({
-                ...base,
-                padding: 0,
-                width: '100%',
-              }),
-            }}
-            menuPortalTarget={document.body}
-            formatOptionLabel={(option, { context }) => {
-              // In dropdown, show "code - name"
-              if (context === 'menu') {
-                return `${option.customer_code} - ${option.customer_name}`;
+        {!isDistributorRoute && (
+          <div className="relative w-[116px]">
+            <Select
+              ref={customerSelectRef}
+              className="text-sm peer"
+              value={
+                customerName
+                  ? {
+                      customer_code: customerName.customer_code,
+                      customer_name: customerName.customer_name,
+                      // Create a display label for the selected value
+                      label: customerName.customer_code,
+                    }
+                  : null
               }
-              // In selected value, show only code
-              return option.customer_code;
-            }}
-          />
+              options={customerOptions.map(customer => ({
+                ...customer,
+                label: `${customer.customer_code} - ${customer.customer_name}`, // Show in dropdown
+              }))}
+              getOptionLabel={e => e.label} // Use the custom label for dropdown
+              getOptionValue={e => e.customer_code} // Store only the code
+              onChange={handleCustomerSelect}
+              placeholder=""
+              components={{
+                DropdownIndicator: () => null,
+                IndicatorSeparator: () => null,
+              }}
+              styles={{
+                ...customStyles,
+                control: base => ({
+                  ...base,
+                  minHeight: '30px',
+                  height: '30px',
+                  lineHeight: '1',
+                  padding: '0px 1px',
+                  width: '120%',
+                  backgroundColor: '#F8F4EC',
+                  borderColor: '#932F67',
+                  boxShadow: 'none',
+                }),
+                singleValue: base => ({
+                  ...base,
+                  lineHeight: '1',
+                  // Ensure only code is displayed in the input
+                  '& > div': {
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  },
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  fontFamily: 'font-amasis',
+                  fontWeight: '600',
+                  padding: '4px 24px',
+                  lineHeight: '1.2',
+                  backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
+                  color: '#555',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }),
+                menu: base => ({
+                  ...base,
+                  width: '500px',
+                  minWidth: '500px',
+                  left: '0px',
+                  right: 'auto',
+                  position: 'absolute',
+                  zIndex: 9999,
+                }),
+                menuList: base => ({
+                  ...base,
+                  padding: 0,
+                  width: '100%',
+                }),
+              }}
+              menuPortalTarget={document.body}
+              formatOptionLabel={(option, { context }) => {
+                // In dropdown, show "code - name"
+                if (context === 'menu') {
+                  return `${option.customer_code} - ${option.customer_name}`;
+                }
+                // In selected value, show only code
+                return option.customer_code;
+              }}
+            />
+            <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
+              Customer Code *
+            </span>
+          </div>
+        )}
+
+        {/* Customer Name (Read-only) */}
+        {!isDistributorRoute && (
+          <div className="relative ml-7 w-96">
+            <input
+              type="text"
+              readOnly
+              value={customerName ? customerName.customer_name : ''}
+              className="outline-none border rounded-[5px] border-[#932F67] p-[3.5px] text-sm bg-gray-100 font-medium w-full"
+              placeholder=""
+            />
+            <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] leading-2 rounded">
+              Customer Name *
+            </span>
+          </div>
+        )}
+
+        {isDistributorRoute && (
+          <div className={`relative ${isDistributorRoute ? 'w-[150px]' : ''}`}>
+          <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium text-gray-700 text-center">
+            {user.usercode || 'executive'}
+          </div>
           <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
             Customer Code *
           </span>
         </div>
+        )}
 
-        {/* Customer Name (Read-only) */}
-        <div className="relative ml-7 w-96">
-          <input
-            type="text"
-            readOnly
-            value={customerName ? customerName.customer_name : ''}
-            className="outline-none border rounded-[5px] border-[#932F67] p-[3.5px] text-sm bg-gray-100 font-medium w-full"
-            placeholder=""
-          />
-          <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] leading-2 rounded">
-            Customer Name *
-          </span>
-        </div>
-
-        <div className="relative">
+        <div className={`relative ${isDistributorRoute ? 'w-[500px]' : ''}`}>
           <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium text-gray-700 text-center">
             {user.username.toUpperCase() || 'executive'}
           </div>
           <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
-            Executive Name *
+            {isDistributorRoute ? 'Customer Name' : 'Executive Name'}
           </span>
         </div>
 
@@ -754,21 +794,32 @@ const Order = ({ onBack }) => {
           </div>
 
           <div className="relative">
-            <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium">
-              {'Select Delivery Date'}
-            </div>
+            <input
+              type="date"
+              ref={deliveryDateRef}
+              value={deliveryDate}
+              min={date} // This prevents selecting past dates in the calendar UI
+              onChange={e => handleDeliveryDateChange(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, deliveryModeRef)}
+              className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium w-full bg-white cursor-pointer"
+            />
             <span
               className="absolute left-2.5 top-[10px] transition-all text-[12px]
-               -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+     -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
             >
               Delivery Date *
             </span>
           </div>
 
-          <div className="relative">
-            <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium">
-              {'Select Delivery Mode'}
-            </div>
+          <div className="relative w-36">
+            <input
+              type="text"
+              value={deliveryMode}
+              ref={deliveryModeRef}
+              onChange={e => setDeliveryMode(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, transporterNameRef)}
+              className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium w-full outline-none focus:border-[#693382]"
+            />
             <span
               className="absolute left-2.5 top-[10px] transition-all text-[12px]
                -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
@@ -777,13 +828,19 @@ const Order = ({ onBack }) => {
             </span>
           </div>
 
-          <div className="relative">
-            <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium">
-              {'Select Transporter Name'}
-            </div>
+          <div className="relative w-36">
+            <input
+              type="text"
+              ref={transporterNameRef}
+              value={transporterName}
+              onChange={e => setTransporterName(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, quantityInputRef)}
+              placeholder=""
+              className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium w-full outline-none focus:border-[#693382]"
+            />
             <span
               className="absolute left-2.5 top-[10px] transition-all text-[12px]
-               -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+     -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
             >
               Transporter Name *
             </span>
@@ -797,7 +854,12 @@ const Order = ({ onBack }) => {
               ref={quantityInputRef}
               value={quantity}
               onChange={e => setQuantity(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleClick(); // Automatically add item on Enter
+                }
+              }}
               placeholder="0"
               min="0"
               step="1"
@@ -954,16 +1016,14 @@ const Order = ({ onBack }) => {
               </div>
             </div>
           </div>
-          <div className='ml-48'>
+          <div className="ml-48">
             <p className="font-medium pr-2 mb-0.5">Total</p>
           </div>
           <div className="w-[350px] px-0.5 py-1">
             <table className="w-full border-b mb-1">
               <tfoot>
                 <tr className="*:border-[#932F67]">
-                  <td className="text-right border w-16 px-1">
-                    {totals.qty}
-                  </td>
+                  <td className="text-right border w-16 px-1">{totals.qty}</td>
                   <td className="w-32 border"></td>
                   <td className="text-right border w-28 px-1">{formatCurrency(totals.amount)}</td>
                 </tr>

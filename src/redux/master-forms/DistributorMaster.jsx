@@ -10,8 +10,8 @@ import { fetchDistributorById } from '../thunks/distributorThunks';
 import handleDistributorSubmit from '../submit/handleDistributorSubmit';
 
 const DistributorMaster = () => {
-  const { distributorData, mode } = useSelector((state) => state.distributorData);
-  const  { id } = useParams();
+  const { distributorData, mode } = useSelector(state => state.distributorData);
+  const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const inputRef = useRef([]);
@@ -49,7 +49,7 @@ const DistributorMaster = () => {
   const handleKeyDown = (e, index) => {
     const key = e.key;
     const { value, selectionStart } = e.target;
-    
+
     if (key === 'Enter') {
       e.preventDefault();
       if (e.target.value.trim() !== '') {
@@ -86,48 +86,49 @@ const DistributorMaster = () => {
   };
 
   // DistributorMaster.jsx - Fix the handleSubmit function
-const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    
+
     // For create mode, handle Firebase signup first
     if (mode === 'create') {
-        try {
-            const result = await signup(
-                distributorData.username,
-                distributorData.email,
-                distributorData.password,
-                "distributor",
-                distributorData.mobile_number
-            );
+      try {
+        const result = await signup(
+          distributorData.usercode,
+          distributorData.username,
+          distributorData.email,
+          distributorData.password,
+          'distributor',
+          distributorData.mobile_number,
+        );
 
-            if (result.success) {
-                toast.success('Distributor created successfully!', {
-                  position: 'bottom-right',
-                  autoClose: 3000
-                });
-                dispatch(setModeDistributorData('create')); // Reset form
-                // Clear form
-                dispatch(updateFieldDistributorData({ name: 'username', value: '' }));
-                dispatch(updateFieldDistributorData({ name: 'mobile_number', value: '' }));
-                dispatch(updateFieldDistributorData({ name: 'email', value: '' }));
-                dispatch(updateFieldDistributorData({ name: 'password', value: '' }));
-                
-                if (inputRef.current[0]) {
-                    inputRef.current[0].focus();
-                }
-            }
-        } catch (error) {
-            toast.error(error.message || 'Failed to create distributor');
+        if (result.success) {
+          toast.success('Distributor created successfully!', {
+            position: 'bottom-right',
+            autoClose: 3000,
+          });
+          dispatch(setModeDistributorData('create')); // Reset form
+          // Clear form
+          dispatch(updateFieldDistributorData({ name: 'username', value: '' }));
+          dispatch(updateFieldDistributorData({ name: 'mobile_number', value: '' }));
+          dispatch(updateFieldDistributorData({ name: 'email', value: '' }));
+          dispatch(updateFieldDistributorData({ name: 'password', value: '' }));
+
+          if (inputRef.current[0]) {
+            inputRef.current[0].focus();
+          }
         }
+      } catch (error) {
+        toast.error(error.message || 'Failed to create distributor');
+      }
     } else {
-        // For update mode, use the handleDistributorSubmit
-        try {
-            await handleDistributorSubmit(e, mode, distributorData, dispatch, navigate, id, inputRef);
-        } catch (error) {
-            toast.error(error.message || 'Failed to update distributor');
-        }
+      // For update mode, use the handleDistributorSubmit
+      try {
+        await handleDistributorSubmit(e, mode, distributorData, dispatch, navigate, id, inputRef);
+      } catch (error) {
+        toast.error(error.message || 'Failed to update distributor');
+      }
     }
-};
+  };
 
   const handleBack = () => {
     navigate(-1); // Go back to previous page
@@ -154,26 +155,91 @@ const handleSubmit = async (e) => {
         </button>
       </div>
 
-      <form action="" onSubmit={handleSubmit} className="w-[25%] h-[20vh] ml-[68px] bg-[#FBFBFB]">
-        <div className='text-[13px] flex mt-2 ml-2 leading-4'>
-          <label htmlFor="username" className='w-[34%]'>Distributor Name</label>
+      <form action="" onSubmit={handleSubmit} className="w-[25%] h-[24vh] ml-[68px] bg-[#FBFBFB]">
+        <div className="text-[13px] flex mt-2 ml-2 leading-4">
+          <label htmlFor="usercode" className="w-[34%]">
+            Distributor Code
+          </label>
           <span>:</span>
-          <input type="text" name='username' value={distributorData.username || ''} ref={(input) => (inputRef.current[0] = input)} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, 0)} className='w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent' autoComplete='off' readOnly={mode === 'display'} />
+          <input
+            type="text"
+            name="usercode"
+            value={distributorData.usercode || ''}
+            ref={input => (inputRef.current[0] = input)}
+            onChange={handleInputChange}
+            onKeyDown={e => handleKeyDown(e, 0)}
+            className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            autoComplete="off"
+            readOnly={mode === 'display'}
+          />
         </div>
-        <div className='text-[13px] flex mt-2 ml-2 leading-4'>
-          <label htmlFor="mobile_number" className='w-[34%]'>Mobile Number</label>
+        <div className="text-[13px] flex mt-2 ml-2 leading-4">
+          <label htmlFor="username" className="w-[34%]">
+            Distributor Name
+          </label>
           <span>:</span>
-          <input type="text" name='mobile_number' value={distributorData.mobile_number || ''} ref={(input) => (inputRef.current[1] = input)} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, 1)} className='w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent' autoComplete='off' readOnly={mode === 'display'} />
+          <input
+            type="text"
+            name="username"
+            value={distributorData.username || ''}
+            ref={input => (inputRef.current[1] = input)}
+            onChange={handleInputChange}
+            onKeyDown={e => handleKeyDown(e, 1)}
+            className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            autoComplete="off"
+            readOnly={mode === 'display'}
+          />
         </div>
-        <div className='text-[13px] flex mt-2 ml-2 leading-4'>
-          <label htmlFor="" className='w-[34%]'>Email</label>
+        <div className="text-[13px] flex mt-2 ml-2 leading-4">
+          <label htmlFor="mobile_number" className="w-[34%]">
+            Mobile Number
+          </label>
           <span>:</span>
-          <input type="text" name='email' value={distributorData.email || ''} ref={(input) => (inputRef.current[2] = input)} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, 2)} className='w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent' autoComplete='off' readOnly={mode === 'display'} />
+          <input
+            type="text"
+            name="mobile_number"
+            value={distributorData.mobile_number || ''}
+            ref={input => (inputRef.current[2] = input)}
+            onChange={handleInputChange}
+            onKeyDown={e => handleKeyDown(e, 2)}
+            className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            autoComplete="off"
+            readOnly={mode === 'display'}
+          />
         </div>
-        <div className='text-[13px] flex mt-2 ml-2 leading-4'>
-          <label htmlFor="" className='w-[34%]'>Password</label>
+        <div className="text-[13px] flex mt-2 ml-2 leading-4">
+          <label htmlFor="" className="w-[34%]">
+            Email
+          </label>
           <span>:</span>
-          <input type="text" name='password' value={distributorData.password || ''} ref={(input) => (inputRef.current[3] = input)} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, 3)} className='w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent' autoComplete='off' readOnly={mode === 'display'} />
+          <input
+            type="text"
+            name="email"
+            value={distributorData.email || ''}
+            ref={input => (inputRef.current[3] = input)}
+            onChange={handleInputChange}
+            onKeyDown={e => handleKeyDown(e, 3)}
+            className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            autoComplete="off"
+            readOnly={mode === 'display'}
+          />
+        </div>
+        <div className="text-[13px] flex mt-2 ml-2 leading-4">
+          <label htmlFor="" className="w-[34%]">
+            Password
+          </label>
+          <span>:</span>
+          <input
+            type="text"
+            name="password"
+            value={distributorData.password || ''}
+            ref={input => (inputRef.current[4] = input)}
+            onChange={handleInputChange}
+            onKeyDown={e => handleKeyDown(e, 4)}
+            className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            autoComplete="off"
+            readOnly={mode === 'display'}
+          />
         </div>
       </form>
       <RightSideButton />

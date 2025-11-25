@@ -84,6 +84,7 @@ const ContextProvider = ({ children }) => {
         setUser({
           ...firebaseUser,
           role: userData?.role || null,
+          usercode: userData?.usercode || null,
           username: userData?.username || null,
         });
         setRole(userData?.role || null);
@@ -210,6 +211,7 @@ const ContextProvider = ({ children }) => {
       const res = await api.post(
         endpoint,
         {
+          usercode,
           username,
           email,
           mobile_number: mobileNumber,

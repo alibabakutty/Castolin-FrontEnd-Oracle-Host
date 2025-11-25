@@ -20,6 +20,7 @@ export const handleDistributorSubmit = async (e, mode, distributorData, navigate
     if (mode === 'create') {
       // signup for new distributor into users table
       const result = await signup(
+        distributorData.usercode,
         distributorData.username,
         distributorData.password,
         'distributor',

@@ -4,6 +4,7 @@ import { fetchAllDistributors, fetchDistributorById } from "../thunks/distributo
 // initial state
 const initialState = {
     distributorData: {
+        usercode: '',
         username: '',
         mobile_number: '',
         email: '',

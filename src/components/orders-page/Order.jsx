@@ -31,7 +31,7 @@ const Order = ({ onBack }) => {
   const isSubmitttingRef = useRef(false);
   const navigate = useNavigate();
 
-  const { user } = useAuth();
+  const { distributorUser } = useAuth();
 
   const location = useLocation();
 
@@ -321,8 +321,8 @@ const Order = ({ onBack }) => {
        // ✅ Handle customer data based on route
       const customerData = isDistributorRoute 
         ? {
-            customer_code: user?.usercode || 'DISTRIBUTOR',
-            customer_name: user?.username || 'Distributor User'
+            customer_code: distributorUser?.customer_code || 'DISTRIBUTOR',
+            customer_name: distributorUser?.customer_name || 'Distributor User'
           }
         : {
             customer_code: customerName?.customer_code || '',
@@ -334,9 +334,9 @@ const Order = ({ onBack }) => {
         order_no: orderNumber,
         date,
         status: 'pending',
-        executiveCode: user.usercode || '',
-        executive: user.username || '',
-        role: user.role || '',
+        executiveCode: distributorUser.usercode || '',
+        executive: distributorUser.username || '',
+        role: distributorUser.role || '',
         customer_code: customerData.customer_code,
         customer_name: customerData.customer_name,
         item_code: item.itemCode,
@@ -660,7 +660,7 @@ const Order = ({ onBack }) => {
         {isDistributorRoute && (
           <div className={`relative ${isDistributorRoute ? 'w-[150px]' : ''}`}>
           <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium text-gray-700 text-center">
-            {user.usercode || 'executive'}
+            {distributorUser.customer_code || 'executive'}
           </div>
           <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
             Customer Code *
@@ -670,7 +670,7 @@ const Order = ({ onBack }) => {
 
         <div className={`relative ${isDistributorRoute ? 'w-[500px]' : ''}`}>
           <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium text-gray-700 text-center">
-            {user.username.toUpperCase() || 'executive'}
+            {distributorUser.customer_name || 'executive'}
           </div>
           <span className="absolute left-2.5 top-[12px] transition-all pointer-events-none -translate-y-[17px] text-[#932F67] px-1.5 font-semibold text-[12px] bg-[#E9EFEC] peer-valid:text-[#932F67] leading-2 rounded">
             {isDistributorRoute ? 'Customer Name' : 'Executive Name'}

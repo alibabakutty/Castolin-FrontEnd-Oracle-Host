@@ -58,7 +58,7 @@ const CDAPage = ({ onBack, moduleType }) => {
       alterDescription: 'Modify distributor information and permissions',
       createPage: '/distributor-master',
       viewPage: '/fetch-view-master/distributor',
-      alterPage: '/distributor-alter',
+      alterPage: '/fetch-alter-master/distributor',
     },
     corporate: {
       title: 'Direct Order Management',
@@ -128,7 +128,7 @@ const CDAPage = ({ onBack, moduleType }) => {
           {/* Buttons Container */}
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
             {/* Create Button */}
-            {isDistributorModule && (
+            {/* {isDistributorModule && (
               <button
                 onClick={handleCreate}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-xl font-medium text-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-3"
@@ -143,7 +143,7 @@ const CDAPage = ({ onBack, moduleType }) => {
                 </svg>
                 {currentModule.createText}
               </button>
-            )}
+            )} */}
 
             {/* View Button */}
             <button

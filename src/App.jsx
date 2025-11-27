@@ -48,7 +48,7 @@ function App() {
           />
           {/* Corporate routes */}
           <Route path='/corporate' element={
-            <ProtectedRoutes roles={['admin', 'corporate']}>
+            <ProtectedRoutes roles={['admin', 'direct']}>
               <CorporateDashboard />
             </ProtectedRoutes>
           } />
@@ -90,12 +90,12 @@ function App() {
             <CustomerMaster />
           </ProtectedRoutes>
         } />
-        <Route path='/distributor-view/:id' element={
+        <Route path='/distributor-view/:customer_code' element={
           <ProtectedRoutes roles={['admin']}>
             <DistributorMaster />
           </ProtectedRoutes>
         } />
-        <Route path='/corporate-view/:id' element={
+        <Route path='/corporate-view/:customer_code' element={
           <ProtectedRoutes roles={['admin']}>
             <CorporateMaster />
           </ProtectedRoutes>
@@ -111,7 +111,7 @@ function App() {
             <CustomerMaster />
           </ProtectedRoutes>
         } />
-        <Route path='/distributor-alter' element={
+        <Route path='/distributor-alter/:usercode' element={
           <ProtectedRoutes roles={['admin']}>
             <DistributorMaster />
           </ProtectedRoutes>

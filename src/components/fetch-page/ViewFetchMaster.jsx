@@ -50,11 +50,13 @@ const ViewFetchMaster = () => {
     distributor: {
       title: 'Distributors',
       apiEndpoint: '/distributors',
-      searchPlaceholder: 'Search by name, email, or role...',
+      searchPlaceholder: 'Search by name, email, mobile number...',
       itemName: 'distributors',
       createLink: '/distributor-master',
       fields: {
-        primary: 'username',
+        primary: 'customer_name',
+        code: 'customer_code',
+        mobile: 'mobile_number',
         email: 'email',
         role: 'role',
         status: 'status',
@@ -64,11 +66,13 @@ const ViewFetchMaster = () => {
     corporate: {
       title: 'Direct Orders',
       apiEndpoint: '/corporates',
-      searchPlaceholder: 'Search by Name, email or role...',
-      itemName: 'corporates',
+      searchPlaceholder: 'Search by code, name, mobile number...',
+      itemName: 'direct orders',
       createLink: '/corporate-master',
       fields: {
-        primary: 'username',
+        primary: 'customer_name',
+        code: 'customer_code',
+        mobile: 'mobile_number',
         email: 'email',
         role: 'role',
         status: 'status',
@@ -239,11 +243,11 @@ const ViewFetchMaster = () => {
   };
 
   const handleDistributorClick = item => {
-    navigate(`/distributor-view/${item.id}`);
+    navigate(`/distributor-view/${item.customer_code}`);
   };
 
   const handleCorporateClick = item => {
-    navigate(`/corporate-view/${item.id}`);
+    navigate(`/corporate-view/${item.customer_code}`);
   };
 
   // Handle item click based on type
@@ -336,9 +340,7 @@ const ViewFetchMaster = () => {
           return (
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <p className="text-xs text-gray-800">{`${item.username.toUpperCase()}-${
-                  item.email
-                }`}</p>
+                <p className="text-xs text-gray-800">{`${item.customer_code} - ${item.customer_name} - ${item.mobile_number}`}</p>
                 {item.status && (
                   <p className="text-xs text-gray-600">
                     Status:{' '}
@@ -360,9 +362,7 @@ const ViewFetchMaster = () => {
           return (
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <p className="text-xs text-gray-800">{`${item.username.toUpperCase()}-${
-                  item.email
-                }`}</p>
+                <p className="text-xs text-gray-800">{`${item.customer_code} - ${item.customer_name} - ${item.mobile_number}`}</p>
                 {item.status && (
                   <p className="text-xs text-gray-600">
                     Status:{' '}

@@ -14,14 +14,14 @@ export const fetchAllCorporates = createAsyncThunk('corporateData/fetchAllCorpor
     }
 });
 
-export const fetchCorporateById = createAsyncThunk('corporateData/fetchCorporateById', async (corporateId, { rejectWithValue }) => {
+export const fetchCorporateByUsercode = createAsyncThunk('corporateData/fetchCorporateByUsercode', async (directOrderCode, { rejectWithValue }) => {
     try {
-        const response = await api.get(`/corporates/${corporateId}`);
+        const response = await api.get(`/corporates/${directOrderCode}`);
         return response.data;
     } catch (error) {
-        console.error(`Error fetching corporate with ID ${corporateId}`, error);
+        console.error(`Error fetching direct order with Usercode ${directOrderCode}`, error);
         return rejectWithValue(
-            error.response?.data?.message || error.message || `Failed to fetch corporate with ID ${corporateId}`
+            error.response?.data?.message || error.message || `Failed to fetch corporate with Usercode ${directOrderCode}`
         );
     }
 })

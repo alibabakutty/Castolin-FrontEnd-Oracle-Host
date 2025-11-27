@@ -1,14 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAllDistributors, fetchDistributorById } from "../thunks/distributorThunks";
+import { fetchAllDistributors, fetchDistributorByUsercode } from "../thunks/distributorThunks";
 
 // initial state
 const initialState = {
     distributorData: {
-        usercode: '',
-        username: '',
+        customer_code: '',
+        customer_name: '',
         mobile_number: '',
+        customer_type: '',
         email: '',
         password: '',
+        
     },
     mode: 'create',
     loading: false,
@@ -46,15 +48,15 @@ const distributorSlice = createSlice({
                 state.distributorData = action.payload;
             })
             .addCase(fetchAllDistributors.rejected, handleError)
-            .addCase(fetchDistributorById.pending, (state) => {
+            .addCase(fetchDistributorByUsercode.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchDistributorById.fulfilled, (state, action) => {
+            .addCase(fetchDistributorByUsercode.fulfilled, (state, action) => {
                 state.loading = false;
                 state.distributorData = action.payload;
             })
-            .addCase(fetchDistributorById.rejected, handleError);
+            .addCase(fetchDistributorByUsercode.rejected, handleError);
     }
 })
 

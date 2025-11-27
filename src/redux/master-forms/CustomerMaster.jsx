@@ -123,7 +123,7 @@ const CustomerMaster = () => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-[25%] h-[20vh] ml-[68px] bg-[#FBFBFB]">
+      <form onSubmit={handleSubmit} className="w-[25%] h-[24vh] ml-[68px] bg-[#FBFBFB]">
         <div className='text-[13px] flex mt-2 ml-2 leading-4'>
           <label htmlFor="customer_code" className='w-[34%]'>Customer Code</label>
           <span>:</span>
@@ -179,6 +179,21 @@ const CustomerMaster = () => {
             ref={(input) => (inputRef.current[3] = input)} 
             onChange={handleInputChange} 
             onKeyDown={(e) => handleKeyDown(e, 3)}
+            className='w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent' 
+            autoComplete='off' 
+            readOnly={mode === 'display'} 
+          />
+        </div>
+        <div className='text-[13px] flex mt-2 ml-2 leading-4'>
+          <label htmlFor="customer_type" className='w-[34%]'>Type</label>
+          <span>:</span>
+          <input 
+            type="text" 
+            name='customer_type' 
+            value={customerData.customer_type || ''} 
+            ref={(input) => (inputRef.current[4] = input)} 
+            onChange={handleInputChange} 
+            onKeyDown={(e) => handleKeyDown(e, 4)}
             className='w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent' 
             autoComplete='off' 
             readOnly={mode === 'display'} 

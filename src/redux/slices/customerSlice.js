@@ -9,6 +9,7 @@ const initialState = {
         customer_name: '',
         mobile_number: '',
         email: '',
+        customer_type: '',
     },
     mode: 'create',
     loading: false,

@@ -37,7 +37,7 @@ const CorporateAuthForm = () => {
         // save credentials after successful login
         await saveCredentials(loginEmail, password, username);
 
-        if (result.role === 'corporate') {
+        if (result.role === 'direct') {
           navigate('/corporate');
         } else if (result.role === 'admin') {
           navigate('/admin');

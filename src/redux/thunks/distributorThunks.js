@@ -15,14 +15,14 @@ export const fetchAllDistributors = createAsyncThunk('distributorData/fetchAllDi
 });
 
 // fetch specific distributor by id
-export const fetchDistributorById = createAsyncThunk('distributorData/fetchDistributorById', async (distributorId, { rejectWithValue }) => {
+export const fetchDistributorByUsercode = createAsyncThunk('distributorData/fetchDistributorByUsercode', async (distributorCode, { rejectWithValue }) => {
     try {
-        const response = await api.get(`/distributors/${distributorId}`);
+        const response = await api.get(`/distributors/${distributorCode}`);
         return response.data;
     } catch (error) {
-        console.error(`Error fetching distributor with ID ${distributorId}:`, error);
+        console.error(`Error fetching distributor with Code ${distributorCode}:`, error);
         return rejectWithValue(
-            error.response?.data?.message || error.message || `Failed to fetch distributor with ID ${distributorId}`
+            error.response?.data?.message || error.message || `Failed to fetch distributor with Usercode ${distributorCode}`
         ); 
     }
 })

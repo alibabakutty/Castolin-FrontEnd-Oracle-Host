@@ -1,13 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAllCorporates, fetchCorporateById } from "../thunks/corporateThunks";
+import { fetchAllCorporates, fetchCorporateByUsercode } from "../thunks/corporateThunks";
 
 // initial state
 const initialState = {
     corporateData: {
-        username: '',
+        customer_code: '',
+        customer_name: '',
         mobile_number: '',
+        customer_type: '',
         email: '',
-        password: ''
+        password: '',
     },
     mode: 'create',
     loading: false,
@@ -45,15 +47,15 @@ const corporateSlice = createSlice({
             state.corporateData = action.payload;
         })
         .addCase(fetchAllCorporates.rejected, handleError)
-        .addCase(fetchCorporateById.pending, (state) => {
+        .addCase(fetchCorporateByUsercode.pending, (state) => {
             state.loading = true;
             state.error = null;
         })
-        .addCase(fetchCorporateById.fulfilled, (state, action) => {
+        .addCase(fetchCorporateByUsercode.fulfilled, (state, action) => {
             state.loading = false;
             state.corporateData = action.payload;
         })
-        .addCase(fetchCorporateById.rejected, handleError);
+        .addCase(fetchCorporateByUsercode.rejected, handleError);
     }
 })
 

@@ -3,19 +3,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/ContextProvider';
 import { setModeCorporateData, updateFieldCorporateData } from '../slices/corporateSlice';
-import { fetchCorporateById } from '../thunks/corporateThunks';
+import { fetchCorporateByUsercode } from '../thunks/corporateThunks';
 import { toast } from 'react-toastify';
 import LeftSideMenu from '../../components/right-side-button/LeftSideMenu';
 import RightSideButton from '../../components/right-side-button/RightSideButton';
-import handleCorporateSubmit from '../submit/handleCorporateSubmit';
 
 const CorporateMaster = () => {
   const { corporateData, mode } = useSelector(state => state.corporateData);
-  const { id } = useParams();
+  const { customer_code } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const inputRef = useRef([]);
-  const { signup } = useAuth();
+  const { signupDirectOrder } = useAuth();
 
   useEffect(() => {
     const path = location.pathname;
@@ -37,9 +36,9 @@ const CorporateMaster = () => {
 
   useEffect(() => {
     if (mode === 'display' || mode === 'update') {
-      dispatch(fetchCorporateById(id));
+      dispatch(fetchCorporateByUsercode(customer_code));
     }
-  }, [mode, id, dispatch]);
+  }, [mode, customer_code, dispatch]);
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -62,7 +61,6 @@ const CorporateMaster = () => {
           const userConfirmed = window.confirm('Do you want to confirm this submit?');
           if (userConfirmed) {
             handleSubmit(e);
-            dispatch(setModeCorporateData('create'));
           } else {
             e.preventDefault();
           }
@@ -90,40 +88,40 @@ const CorporateMaster = () => {
     e.preventDefault();
     // for create mode, handel firebase signup first
     if (mode === 'create') {
+      console.log('Create mode not available:');
+    } else {
+      // For update mode - use the enhanced signupDirectorder
       try {
-        const result = await signup(
-          corporateData.username,
+        const updates = {
+          customer_name: corporateData.customer_name,
+          mobile_number: corporateData.mobile_number,
+          customer_type: corporateData.customer_type,
+          role: corporateData.customer_type,
+          email: corporateData.email,
+          password: corporateData.password,
+        };
+
+        const result = await signupDirectOrder(
+          corporateData.customer_code,
+          updates,
           corporateData.email,
-          corporateData.password,
-          'corporate',
-          corporateData.mobile_number,
+          corporateData.password
         );
 
         if (result.success) {
-          toast.success('Corporate created successfully!', {
+          toast.success('Direct Order updated successfully!', {
             position: 'bottom-right',
             autoClose: 3000,
           });
-          dispatch(setModeCorporateData('create'));
-          // clear form
-          dispatch(updateFieldCorporateData({ name: 'username', value: '' }));
-          dispatch(updateFieldCorporateData({ name: 'mobile_number', value: '' }));
-          dispatch(updateFieldCorporateData({ name: 'email', value: '' }));
-          dispatch(updateFieldCorporateData({ name: 'password', value: '' }));
 
-          if (inputRef.current[0]) {
-            inputRef.current[0].focus();
-          }
+          // reset form or navigate away
+          dispatch(setModeCorporateData('create'));
+
+        } else {
+          toast.error(result.message || 'Failed to update Direct order');
         }
       } catch (error) {
-        toast.error(error.message || 'Failed to create corporate');
-      }
-    } else {
-      // for update mode, use the handlesubmit
-      try {
-        await handleCorporateSubmit(e, mode, corporateData, dispatch, navigate, id, inputRef);
-      } catch (error) {
-        toast.error(error.message || 'Failed to update corporate');
+        toast.error(error.message || 'Failed to update direct order');
       }
     }
   };
@@ -152,19 +150,36 @@ const CorporateMaster = () => {
         </button>
       </div>
 
-      <form action="" onSubmit={handleSubmit} className="w-[25%] h-[20vh] ml-[68px] bg-[#FBFBFB]">
+      <form action="" onSubmit={handleSubmit} className="w-[25%] h-[29vh] ml-[68px] bg-[#FBFBFB]">
         <div className="text-[13px] flex mt-2 ml-2 leading-4">
-          <label htmlFor="username" className="w-[34%]">
+          <label htmlFor="customer_code" className="w-[34%]">
+            Direct Order Code
+          </label>
+          <span>:</span>
+          <input
+            type="text"
+            name="customer_code"
+            value={corporateData.customer_code || ''}
+            ref={input => (inputRef.current[0] = input)}
+            onChange={handleInputChange}
+            onKeyDown={e => handleKeyDown(e, 0)}
+            className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            autoComplete="off"
+            readOnly={mode === 'display'}
+          />
+        </div>
+        <div className="text-[13px] flex mt-2 ml-2 leading-4">
+          <label htmlFor="customer_name" className="w-[34%]">
             Direct Order Name
           </label>
           <span>:</span>
           <input
             type="text"
-            name="username"
-            value={corporateData.username || ''}
-            ref={input => (inputRef.current[0] = input)}
+            name="customer_name"
+            value={corporateData.customer_name || ''}
+            ref={input => (inputRef.current[1] = input)}
             onChange={handleInputChange}
-            onKeyDown={e => handleKeyDown(e, 0)}
+            onKeyDown={e => handleKeyDown(e, 1)}
             className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
             autoComplete="off"
             readOnly={mode === 'display'}
@@ -179,16 +194,33 @@ const CorporateMaster = () => {
             type="text"
             name="mobile_number"
             value={corporateData.mobile_number || ''}
-            ref={input => (inputRef.current[1] = input)}
+            ref={input => (inputRef.current[2] = input)}
             onChange={handleInputChange}
-            onKeyDown={e => handleKeyDown(e, 1)}
+            onKeyDown={e => handleKeyDown(e, 2)}
             className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
             autoComplete="off"
             readOnly={mode === 'display'}
           />
         </div>
         <div className="text-[13px] flex mt-2 ml-2 leading-4">
-          <label htmlFor="" className="w-[34%]">
+          <label htmlFor="customer_type" className="w-[34%]">
+            Type
+          </label>
+          <span>:</span>
+          <input
+            type="text"
+            name="customer_type"
+            value={corporateData.customer_type || ''}
+            ref={input => (inputRef.current[3] = input)}
+            onChange={handleInputChange}
+            onKeyDown={e => handleKeyDown(e, 3)}
+            className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
+            autoComplete="off"
+            readOnly
+          />
+        </div>
+        <div className="text-[13px] flex mt-2 ml-2 leading-4">
+          <label htmlFor="email" className="w-[34%]">
             Email
           </label>
           <span>:</span>
@@ -196,9 +228,9 @@ const CorporateMaster = () => {
             type="text"
             name="email"
             value={corporateData.email || ''}
-            ref={input => (inputRef.current[2] = input)}
+            ref={input => (inputRef.current[4] = input)}
             onChange={handleInputChange}
-            onKeyDown={e => handleKeyDown(e, 2)}
+            onKeyDown={e => handleKeyDown(e, 4)}
             className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
             autoComplete="off"
             readOnly={mode === 'display'}
@@ -213,12 +245,11 @@ const CorporateMaster = () => {
             type="text"
             name="password"
             value={corporateData.password || ''}
-            ref={input => (inputRef.current[3] = input)}
+            ref={input => (inputRef.current[5] = input)}
             onChange={handleInputChange}
-            onKeyDown={e => handleKeyDown(e, 3)}
+            onKeyDown={e => handleKeyDown(e, 5)}
             className="w-[200px] ml-2 pl-0.5 h-5 font-medium text-[13px] capitalize focus:bg-yellow-200 focus:outline-none focus:border-blue-500 focus:border border border-transparent"
             autoComplete="off"
-            readOnly={mode === 'display'}
           />
         </div>
       </form>

@@ -84,6 +84,7 @@ const CorporateAuthForm = () => {
                 className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50 outline-none focus:border-blue-400 text-sm font-amasis"
                 placeholder="Enter your username or email"
                 disabled={isLoading}
+                autoComplete='off'
               />
             </div>
 
@@ -98,6 +99,7 @@ const CorporateAuthForm = () => {
                 className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50 outline-none focus:border-blue-400 text-sm font-amasis"
                 placeholder="Enter your password"
                 disabled={isLoading}
+                autoComplete='off'
               />
             </div>
           </div>

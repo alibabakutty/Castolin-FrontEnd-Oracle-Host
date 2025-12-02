@@ -14,8 +14,14 @@ const OrderReportPage = () => {
   const [customerName, setCustomerName] = useState(null);
   const [executiveName, setExecutiveName] = useState(null);
   const [quantity, setQuantity] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryMode, setDeliveryMode] = useState('');
+  const [transporterName, setTransporterName] = useState('');
   const itemSelectRef = useRef(null);
   const customerSelectRef = useRef(null);
+  const deliveryDateRef = useRef(null);
+  const deliveryModeRef = useRef(null);
+  const transporterNameRef = useRef(null);
   const executiveSelectRef = useRef(null);
   const quantityInputRef = useRef(null);
   const buttonRef = useRef(null);
@@ -48,6 +54,15 @@ const OrderReportPage = () => {
     }
   }, []);
 
+  const formatDate = dateString => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const transformOrderData = apiData => {
     return apiData.map(item => ({
       voucher_type: item.voucher_type,
@@ -66,6 +81,8 @@ const OrderReportPage = () => {
       splDiscAmt: item.spl_disc_amount || 0,
       netRate: item.net_rate || 0,
       grossAmount: item.gross_amount || 0,
+      delivery_date: item.delivery_date || '',
+      delivery_mode: item.delivery_mode || '',
     }));
   };
 
@@ -145,14 +162,7 @@ const OrderReportPage = () => {
 
   const handleItemSelect = selected => {
     setItem(selected);
-    quantityInputRef.current.focus();
-  };
-
-  const handleKeyDown = e => {
-    if (quantityInputRef.current.value !== '' && e.key === 'Enter') {
-      e.preventDefault();
-      buttonRef.current.focus();
-    }
+    deliveryDateRef.current.focus();
   };
 
   useEffect(() => {
@@ -245,7 +255,27 @@ const OrderReportPage = () => {
 
     setItem('');
     setQuantity('');
-    itemSelectRef.current.focus();
+  };
+
+  const isValidDate = value => {
+    // Must match yyyy-mm-dd (HTML date input standard)
+    return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  };
+
+  // Add this function for field navigation
+  const handleFieldKeyDown = (e, nextFieldRef, currentValue, validator) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+
+      if (validator && !validator(currentValue)) {
+        console.log('Date is not complete. Staying in same field.');
+        return;
+      }
+
+      if (nextFieldRef && nextFieldRef.current) {
+        nextFieldRef.current.focus();
+      }
+    }
   };
 
   // Function to update existing orders via PUT endpoint
@@ -379,7 +409,7 @@ const OrderReportPage = () => {
     const splDisc = Number(row.splDisc || defaultSplDiscount);
     // Recalculate all amounts based on new quantity
     const discAmt = (gross * disc) / 100;
-    const splDiscAmt = ((gross - discAmt) * splDisc) / 100;
+    const splDiscAmt = (gross * splDisc) / 100;
     const totalDisc = discAmt + splDiscAmt;
 
     updatedRows[index].itemQty = newQty;
@@ -392,6 +422,29 @@ const OrderReportPage = () => {
     setOrderData(updatedRows);
   };
 
+  const handleDeliveryDateChange = seelctedDate => {
+    setDeliveryDate(seelctedDate);
+  };
+
+  // Add onBlur handler for validation
+  const handleDeliveryDateBlur = e => {
+    const selectedDate = e.target.value;
+
+    if (selectedDate && selectedDate < date) {
+      toast.error('Please enter valid delivery date!', {
+        position: 'bottom-right',
+        autoClose: 4000,
+      });
+      setDeliveryDate(''); // Clear the invalid date
+      // Keep focus on delivery date field instead of moving to next field
+      setTimeout(() => {
+        deliveryDateRef.current.focus();
+      }, 100);
+      return false; // Prevent further processing
+    }
+    return true; // validation passed
+  };
+
   // Format for display - show as whole number
   const formatQuantityForDisplay = quantity => {
     const num = Number(quantity) || 0;
@@ -400,67 +453,67 @@ const OrderReportPage = () => {
   };
 
   // Function to handle discount percentage change
-const handleDiscChange = (index, value) => {
-  // Allow only numbers and decimal point
-  const decimalRegex = /^\d*\.?\d*$/;
-  if (value !== '' && !decimalRegex.test(value)) {
-    return; // Don't update if invalid
-  }
+  const handleDiscChange = (index, value) => {
+    // Allow only numbers and decimal point
+    const decimalRegex = /^\d*\.?\d*$/;
+    if (value !== '' && !decimalRegex.test(value)) {
+      return; // Don't update if invalid
+    }
 
-  const updatedRows = [...orderData];
-  const row = updatedRows[index];
+    const updatedRows = [...orderData];
+    const row = updatedRows[index];
 
-  const disc = Number(value) || 0;
-  const gross = row.amount;
-  const qty = Number(row.itemQty) || 1;
+    const disc = Number(value) || 0;
+    const gross = row.amount;
+    const qty = Number(row.itemQty) || 1;
 
-  // FIX: Use defaultSplDiscount when row.splDisc is not available
-  const currentSplDisc = Number(row.splDisc || defaultSplDiscount);
-  
-  // Recalculate discount amounts
-  const discAmt = (gross * disc) / 100;
-  const splDiscAmt = ((gross - discAmt) * currentSplDisc) / 100;
-  const totalDisc = discAmt + splDiscAmt;
+    // FIX: Use defaultSplDiscount when row.splDisc is not available
+    const currentSplDisc = Number(row.splDisc || defaultSplDiscount);
 
-  updatedRows[index].disc = value; // Keep as string for proper display
-  updatedRows[index].discAmt = discAmt;
-  updatedRows[index].splDiscAmt = splDiscAmt;
-  updatedRows[index].netRate = qty > 0 ? (gross - totalDisc) / qty : 0;
-  updatedRows[index].grossAmount = gross - totalDisc;
+    // Recalculate discount amounts
+    const discAmt = (gross * disc) / 100;
+    const splDiscAmt = (gross * currentSplDisc) / 100;
+    const totalDisc = discAmt + splDiscAmt;
 
-  setOrderData(updatedRows);
-};
+    updatedRows[index].disc = value; // Keep as string for proper display
+    updatedRows[index].discAmt = discAmt;
+    updatedRows[index].splDiscAmt = splDiscAmt;
+    updatedRows[index].netRate = qty > 0 ? (gross - totalDisc) / qty : 0;
+    updatedRows[index].grossAmount = gross - totalDisc;
+
+    setOrderData(updatedRows);
+  };
 
   // Function to handle special discount percentage change
-const handleSplDiscChange = (index, value) => {
-  // Allow only numbers and decimal point
-  const decimalRegex = /^\d*\.?\d*$/;
-  if (value !== '' && !decimalRegex.test(value)) {
-    return; // Don't update if invalid
-  }
+  const handleSplDiscChange = (index, value) => {
+    // Allow only numbers and decimal point
+    const decimalRegex = /^\d*\.?\d*$/;
+    if (value !== '' && !decimalRegex.test(value)) {
+      return; // Don't update if invalid
+    }
 
-  const updatedRows = [...orderData];
-  const row = updatedRows[index];
+    const updatedRows = [...orderData];
+    const row = updatedRows[index];
 
-  const splDisc = parseFloat(value) || 0;
-  const gross = Number(row.amount) || 0;
-  const qty = Number(row.itemQty) || 1;
-  
-  // FIX: Use defaultDiscount when row.disc is not available
-  const currentDisc = Number(row.disc || defaultDiscount);
-  const discAmt = (gross * currentDisc) / 100;
+    const splDisc = parseFloat(value) || 0;
+    const gross = Number(row.amount) || 0;
+    const qty = Number(row.itemQty) || 1;
 
-  // Recalculate special discount amounts
-  const splDiscAmt = ((gross - discAmt) * splDisc) / 100;
-  const totalDisc = discAmt + splDiscAmt;
+    // FIX: Use defaultDiscount when row.disc is not available
+    const currentDisc = Number(row.disc || defaultDiscount);
+    const discAmt = (gross * currentDisc) / 100;
 
-  updatedRows[index].splDisc = value; // Keep as string for proper display
-  updatedRows[index].splDiscAmt = splDiscAmt;
-  updatedRows[index].netRate = qty > 0 ? (gross - totalDisc) / qty : 0;
-  updatedRows[index].grossAmount = gross - totalDisc;
+    // Recalculate special discount amounts
+    const splDiscAmt = (gross * splDisc) / 100;
+    const totalDisc = discAmt + splDiscAmt;
 
-  setOrderData(updatedRows);
-};
+    updatedRows[index].splDisc = value; // Keep as string for proper display
+    updatedRows[index].splDiscAmt = splDiscAmt;
+    updatedRows[index].netRate = qty > 0 ? (gross - totalDisc) / qty : 0;
+    updatedRows[index].grossAmount = gross - totalDisc;
+
+    setOrderData(updatedRows);
+  };
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -623,69 +676,69 @@ const handleSplDiscChange = (index, value) => {
       .replace(/^₹/, '₹ ');
   };
 
-  // const customStyles = {
-  //   control: (base, state) => {
-  //     let customWidth = '500px';
-  //     if (windowWidth <= 768) {
-  //       customWidth = '100%';
-  //     } else if (windowWidth <= 1024) {
-  //       customWidth = '200px';
-  //     } else if (windowWidth <= 1280) {
-  //       customWidth = '250px';
-  //     } else if (windowWidth <= 1366) {
-  //       customWidth = '300px';
-  //     }
-  //     return {
-  //       ...base,
-  //       minHeight: '26px',
-  //       height: '26px',
-  //       padding: '0 1px',
-  //       width: customWidth,
-  //       backgroundColor: '#E9EFEC',
-  //       borderColor: '#932F67',
-  //       boxShadow: 'none',
-  //     };
-  //   },
-  //   valueContainer: base => ({
-  //     ...base,
-  //     padding: '0px 4px',
-  //     height: '20px',
-  //   }),
-  //   menu: base => {
-  //     let customWidth = '550px';
-  //     if (windowWidth <= 768) {
-  //       customWidth = '100%';
-  //     } else if (windowWidth <= 1024) {
-  //       customWidth = '350px';
-  //     } else if (windowWidth <= 1366) {
-  //       customWidth = '400px';
-  //     }
-  //     return {
-  //       ...base,
-  //       width: customWidth,
-  //       overflowY: 'auto',
-  //       zIndex: 9999,
-  //       border: '1px solid #ddd',
-  //     };
-  //   },
-  //   option: (base, state) => ({
-  //     ...base,
-  //     padding: '8px 12px',
-  //     backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
-  //     color: 'black',
-  //     cursor: 'pointer',
-  //   }),
-  //   menuList: base => ({
-  //     ...base,
-  //     padding: 0,
-  //     minHeight: '55vh',
-  //   }),
-  //   input: base => ({
-  //     ...base,
-  //     margin: 0,
-  //     padding: 0,
-  //   }),
-  // };
+  const customStyles = {
+    control: (base, state) => {
+      let customWidth = '500px';
+      if (windowWidth <= 768) {
+        customWidth = '100%';
+      } else if (windowWidth <= 1024) {
+        customWidth = '200px';
+      } else if (windowWidth <= 1280) {
+        customWidth = '250px';
+      } else if (windowWidth <= 1366) {
+        customWidth = '300px';
+      }
+      return {
+        ...base,
+        minHeight: '26px',
+        height: '26px',
+        padding: '0 1px',
+        width: customWidth,
+        backgroundColor: '#E9EFEC',
+        borderColor: '#932F67',
+        boxShadow: 'none',
+      };
+    },
+    valueContainer: base => ({
+      ...base,
+      padding: '0px 4px',
+      height: '20px',
+    }),
+    menu: base => {
+      let customWidth = '550px';
+      if (windowWidth <= 768) {
+        customWidth = '100%';
+      } else if (windowWidth <= 1024) {
+        customWidth = '350px';
+      } else if (windowWidth <= 1366) {
+        customWidth = '400px';
+      }
+      return {
+        ...base,
+        width: customWidth,
+        overflowY: 'auto',
+        zIndex: 9999,
+        border: '1px solid #ddd',
+      };
+    },
+    option: (base, state) => ({
+      ...base,
+      padding: '8px 12px',
+      backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
+      color: 'black',
+      cursor: 'pointer',
+    }),
+    menuList: base => ({
+      ...base,
+      padding: 0,
+      minHeight: '55vh',
+    }),
+    input: base => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+    }),
+  };
 
   return (
     <div className="font-amasis p-3 bg-[#E9EFEC] border-2 h-screen">
@@ -782,92 +835,176 @@ const handleSplDiscChange = (index, value) => {
       {/* Body Part */}
       <div className="mt-1 border h-[87vh]">
         <div className="flex p-1 h-16 items-center gap-4">
-          {/* Item Code */}
+          {/* Item Code Selection */}
           <div className="relative w-32">
-            <div className="border px-[3px] py-1.5 rounded-[5px] border-[#932F67] text-sm font-medium text-center w-full bg-[#E9EFEC]">
-              {item?.item_code || 'Select Item'}
-            </div>
-            <span className="absolute left-2.5 top-[10px] transition-all text-[12px] -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1 rounded font-semibold leading-2">
-              Item Code *
-            </span>
-          </div>
-
-          {/* Item Name */}
-          <div className="relative w-[500px]">
             <Select
               ref={itemSelectRef}
-              className="text-sm font-medium"
+              className="text-sm peer"
               value={item}
               options={itemOptions}
-              getOptionLabel={e => e.stock_item_name}
               getOptionValue={e => e.item_code}
               onChange={handleItemSelect}
-              placeholder="Select Product Name..."
-              isDisabled={isViewOnlyReport}
+              placeholder=""
               components={{
                 DropdownIndicator: () => null,
-                IndicatorSeparator: () => null,
+                IndicatorsContainer: () => null,
               }}
+              formatOptionLabel={(option, { context }) =>
+                context === 'menu'
+                  ? `${option.item_code} - ${option.stock_item_name}`
+                  : option.item_code
+              }
               styles={{
+                ...customStyles,
                 control: base => ({
                   ...base,
-                  minHeight: '33px',
-                  height: '33px',
+                  minHeight: '30px',
+                  height: '30px',
                   backgroundColor: '#F8F4EC',
                   borderColor: '#932F67',
-                  borderRadius: '5px',
                   boxShadow: 'none',
-                  fontWeight: '300',
-                  textAlign: 'center',
                   cursor: 'pointer',
                 }),
                 singleValue: base => ({
                   ...base,
-                  fontWeight: '300',
-                  textAlign: 'center',
+                  lineHeight: '1',
                 }),
                 placeholder: base => ({
                   ...base,
                   textAlign: 'center',
                   color: '#777',
+                  fontSize: '12px',
                 }),
                 option: (base, state) => ({
                   ...base,
                   fontFamily: 'font-amasis',
-                  padding: '2px 4px',
+                  fontWeight: '600',
+                  padding: '4px 24px',
+                  lineHeight: '1.2',
                   backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
                   color: '#555',
                   cursor: 'pointer',
+                  fontSize: '14px',
                 }),
                 menu: base => ({
                   ...base,
+                  width: '550px',
+                  minWidth: '120px',
                   zIndex: 9999,
                 }),
               }}
               menuPortalTarget={document.body}
             />
             <span className="absolute left-2.5 top-[10px] transition-all text-[12px] -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1 rounded font-semibold leading-2">
+              Item Code *
+            </span>
+          </div>
+
+          {/* Item Name (Read-only) */}
+          <div className="relative w-[450px]">
+            <input
+              type="text"
+              readOnly
+              value={item ? item.stock_item_name : ''}
+              className="outline-none border rounded-[5px] border-[#932F67] p-[3.5px] text-sm bg-gray-100 font-medium w-full"
+              placeholder=""
+            />
+            <span className="absolute left-2.5 top-[10px] transition-all text-[12px] -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1 rounded font-semibold leading-2">
               Item Name *
+            </span>
+          </div>
+
+          <div className="relative">
+            <input
+              type="date"
+              ref={deliveryDateRef}
+              value={deliveryDate}
+              min={date} // This prevents selecting past dates in the calendar UI
+              onChange={e => handleDeliveryDateChange(e.target.value)}
+              onBlur={handleDeliveryDateBlur}
+              onKeyDown={e =>
+                handleFieldKeyDown(
+                  e,
+                  deliveryModeRef,
+                  deliveryDate,
+                  isValidDate, // pass validator
+                )
+              }
+              className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium w-full bg-white cursor-pointer"
+            />
+            <span
+              className="absolute left-2.5 top-[10px] transition-all text-[12px]
+     -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+            >
+              Delivery Date *
+            </span>
+          </div>
+
+          <div className="relative w-36">
+            <input
+              type="text"
+              value={deliveryMode}
+              ref={deliveryModeRef}
+              onChange={e => setDeliveryMode(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, transporterNameRef)}
+              className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium w-full outline-none focus:border-[#693382]"
+            />
+            <span
+              className="absolute left-2.5 top-[10px] transition-all text-[12px]
+               -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+            >
+              Delivery Mode *
+            </span>
+          </div>
+
+          <div className="relative w-40">
+            <input
+              type="text"
+              ref={transporterNameRef}
+              value={transporterName}
+              onChange={e => setTransporterName(e.target.value)}
+              onKeyDown={e => handleFieldKeyDown(e, quantityInputRef)}
+              placeholder=""
+              className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium w-full outline-none focus:border-[#693382]"
+            />
+            <span
+              className="absolute left-2.5 top-[10px] transition-all text-[12px]
+     -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded font-semibold leading-2"
+            >
+              Transporter Name *
             </span>
           </div>
 
           {!isViewOnlyReport && (
             <>
               <div className="flex items-center">
-                <span className="text-sm font-medium mr-2">Qty * :</span>
-                <input
-                  type="text"
-                  name="qty"
-                  ref={quantityInputRef}
-                  value={quantity}
-                  onChange={e => setQuantity(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="0"
-                  className="py-0.5 border w-16 outline-none text-sm rounded px-1 border-[#932F67] bg-[#F8F4EC] text-center"
-                  autoComplete="off"
-                />
+                <div className="relative w-20">
+                  {' '}
+                  {/* adjust width as needed */}
+                  <input
+                    type="text"
+                    name="qty"
+                    ref={quantityInputRef}
+                    value={quantity}
+                    onChange={e => setQuantity(e.target.value)}
+                    onKeyDown={e => handleFieldKeyDown(e, buttonRef)}
+                    placeholder=""
+                    className="border p-[3.5px] rounded-[5px] border-[#932F67] 
+                 text-sm font-medium w-full outline-none focus:border-[#693382] 
+                 bg-[#F8F4EC] text-center"
+                    autoComplete="off"
+                  />
+                  <span
+                    className="absolute left-2.5 top-[10px] transition-all text-[12px]
+                 -translate-y-[15px] text-[#932F67] bg-[#E9EFEC] px-1.5 rounded 
+                 font-semibold leading-2"
+                  >
+                    Qty *
+                  </span>
+                </div>
               </div>
-              <div>
+
+              <div className="ml-20">
                 <input
                   type="button"
                   ref={buttonRef}
@@ -875,27 +1012,6 @@ const handleSplDiscChange = (index, value) => {
                   onClick={handleClick}
                   className="bg-[#693382] text-white px-4 rounded-[6px] py-0.5 outline-none"
                 />
-              </div>
-
-              <div className="flex w-44 justify-end ml-20">
-                {/* Show Update button when editing existing order, Save for new orders */}
-                {selectedOrderData ? (
-                  <button
-                    type="button"
-                    onClick={handleUpdate}
-                    className="bg-[#28a745] text-white px-4 rounded-[6px] py-0.5 outline-none hover:bg-[#218838] transition-colors"
-                  >
-                    Update
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    className="bg-[#693382] text-white px-4 rounded-[6px] py-0.5 outline-none hover:bg-[#5a2a6f] transition-colors"
-                  >
-                    Save
-                  </button>
-                )}
               </div>
             </>
           )}
@@ -909,47 +1025,48 @@ const handleSplDiscChange = (index, value) => {
                 <td className="font-medium text-sm border border-gray-300 py-0.5 w-10 text-center">
                   S.No
                 </td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[100px]">
+                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[95px]">
                   Item Code
                 </td>
                 <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[350px] text-center">
                   Product Name
                 </td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 text-center w-16">
-                  HSN
-                </td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 px-1 w-16 text-center">
-                  GST %
-                </td>
                 <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-8">
-                  Quantity
+                  Qty
                 </td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-8">UOM</td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-24">
+                <td className="font-medium text-sm border border-gray-300 py-0.5 px-0.3">UOM</td>
+                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-20">
                   Rate
                 </td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-28">
+                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-24">
                   Amount
                 </td>
+
                 {!isViewOnlyReport && (
                   <>
                     <td className="font-medium text-sm border border-gray-300 px-2 text-right w-20">
                       Disc %
                     </td>
-                    <td className="font-medium text-sm border border-gray-300 text-center w-20">
-                      Disc Amt
-                    </td>
                     <td className="font-medium text-sm border border-gray-300 px-2 text-right w-28">
                       Spl Disc %
                     </td>
-                    <td className="font-medium text-sm border border-gray-300 px-2 text-right w-32">
-                      Spl Disc Amt
+                    <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-center w-24">
+                      Net Rate
                     </td>
-                    <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-28">
-                      Net Amount
-                    </td>
-                    <td className="font-medium border text-sm border-gray-300 py-0.5 px-2 text-right w-32">
+                    <td className="font-medium border text-sm border-gray-300 py-0.5 text-center w-28">
                       Gross Amount
+                    </td>
+                    <td className="font-medium text-sm border border-gray-300 py-0.5 text-center w-[68px]">
+                      HSN
+                    </td>
+                    <td className="font-medium text-sm border border-gray-300 py-0.5 px-1 w-16 text-center">
+                      GST %
+                    </td>
+                    <td className="font-medium border text-sm border-gray-300 py-0.5 text-center w-[100px]">
+                      Dely. Date
+                    </td>
+                    <td className="font-medium border text-sm border-gray-300 py-0.5 text-center w-[83px]">
+                      Dely. Mode
                     </td>
                   </>
                 )}
@@ -969,10 +1086,8 @@ const handleSplDiscChange = (index, value) => {
                 orderData.map((item, index) => (
                   <tr key={index} className="leading-12">
                     <td className="border border-gray-400  text-center text-sm">{index + 1}</td>
-                    <td className="border border-gray-400  text-center text-sm">{item.itemCode}</td>
+                    <td className="border border-gray-400 pl-0.5 text-sm">{item.itemCode}</td>
                     <td className="border border-gray-400  px-2 text-sm">{item.itemName}</td>
-                    <td className="border border-gray-400  text-center text-sm">{item.hsn}</td>
-                    <td className="border border-gray-400  text-center text-sm">{item.gst}</td>
                     {/* Editable Quantity */}
                     <td className="border border-gray-400  px-2 text-right text-sm bg-[#F8F4EC]">
                       <input
@@ -1006,10 +1121,6 @@ const handleSplDiscChange = (index, value) => {
                           </div>
                         </td>
 
-                        <td className="border border-gray-400 px-2 text-right text-sm w-">
-                          {formatCurrency(item.discAmt)}
-                        </td>
-
                         <td className="border border-gray-400 px-1 text-center bg-[#F8F4EC]">
                           <div className="flex items-center justify-end gap-1">
                             <input
@@ -1022,15 +1133,21 @@ const handleSplDiscChange = (index, value) => {
                             <span className="text-xs">%</span>
                           </div>
                         </td>
-
-                        <td className="border border-gray-400 px-2 text-right text-sm">
-                          {formatCurrency(item.splDiscAmt)}
-                        </td>
-                        <td className="border border-gray-400  px-2 text-right text-sm">
+                        <td className="border border-gray-400  px-1 text-right text-sm">
                           {formatCurrency(item.netRate)}
                         </td>
-                        <td className="border border-gray-400  px-4 text-right text-sm">
+                        <td className="border border-gray-400  px-2 text-right text-sm">
                           {formatCurrency(item.grossAmount)}
+                        </td>
+                        <td className="border border-gray-400  text-center text-sm">{item.hsn}</td>
+                        <td className="border border-gray-400  text-center text-sm">
+                          {Math.round(item.gst)}
+                        </td>
+                        <td className="border border-gray-400 text-center text-sm">
+                          {formatDate(item.delivery_date || '')}
+                        </td>
+                        <td className="border border-gray-400  px-2 text-sm">
+                          {item.delivery_mode || ''}
                         </td>
                       </>
                     )}
@@ -1041,8 +1158,8 @@ const handleSplDiscChange = (index, value) => {
           </table>
         </div>
 
-        <div className="h-[7vh] flex justify-end border-t items-center">
-          <div className="w-2/4 px-0.5">
+        <div className="h-[7vh] flex border-t items-center">
+          <div className="w-[410px] px-0.5">
             <div className="relative mb-1 ml-1 flex gap-2">
               <textarea
                 name="remarks"
@@ -1051,9 +1168,9 @@ const handleSplDiscChange = (index, value) => {
                 onChange={e => setRemarks(e.target.value)}
                 placeholder="Remarks"
                 disabled={isViewOnlyReport}
-                className="border border-[#932F67] resize-none md:w-[400px] outline-none rounded px-1  peer h-[26px] bg-[#F8F4EC]"
+                className="border border-[#932F67] resize-none md:w-[175px] outline-none rounded px-1  peer h-[26px] bg-[#F8F4EC]"
               ></textarea>
-              <div className="ml-4">
+              <div className="">
                 <label htmlFor="" className="text-sm font-medium">
                   Status :{' '}
                 </label>
@@ -1072,27 +1189,27 @@ const handleSplDiscChange = (index, value) => {
               </div>
             </div>
           </div>
-          <div>
+          <div className="">
             <p className="font-medium pr-2">Total</p>
           </div>
-          <div className="w-2/4 px-0.5 py-1">
+          <div className="w-[1000px] px-0.5 py-1">
             <table className="w-full border-b mb-1">
               <tfoot>
                 <tr className="*:border-[#932F67]">
-                  <td className="text-right border w-24 px-1">
+                  <td className="text-right border w-10 px-1">
                     {formatQuantityForDisplay(totals.qty)}
                   </td>
                   {!isViewOnlyReport && (
                     <>
-                      <td className="w-32 border"></td>
+                      <td className="w-10 border"></td>
                     </>
                   )}
 
-                  <td className="text-right border w-28 px-1">{formatCurrency(totals.amount)}</td>
+                  <td className="text-right border w-16 px-1">{formatCurrency(totals.amount)}</td>
 
                   {!isViewOnlyReport && (
                     <>
-                      <td className="text-right border w-24 px-1"></td>
+                      <td className="text-right border w-32 px-1"></td>
 
                       <td className="text-right border w-28 px-1">
                         {formatCurrency(totals.grossAmt)}
@@ -1102,6 +1219,26 @@ const handleSplDiscChange = (index, value) => {
                 </tr>
               </tfoot>
             </table>
+          </div>
+          <div className="flex w-44 justify-end pr-1 pb-1">
+            {/* Show Update button when editing existing order, Save for new orders */}
+            {selectedOrderData ? (
+              <button
+                type="button"
+                onClick={handleUpdate}
+                className="bg-[#28a745] text-white px-4 rounded-[6px] py-0.5 outline-none hover:bg-[#218838] transition-colors"
+              >
+                Save
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="bg-[#693382] text-white px-4 rounded-[6px] py-0.5 outline-none hover:bg-[#5a2a6f] transition-colors"
+              >
+                Save
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -37,6 +37,15 @@ const Order = ({ onBack }) => {
 
   const isDistributorRoute = location.pathname.includes('/distributor');
 
+  const formatDate = dateString => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   useEffect(() => {
     const handleKeyDown = e => {
       if (e.key === 'Escape') {
@@ -160,10 +169,21 @@ const Order = ({ onBack }) => {
     deliveryDateRef.current.focus();
   };
 
+  const isValidDate = value => {
+    // Must match yyyy-mm-dd (HTML date input standard)
+    return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  };
+
   // Add this function for field navigation
-  const handleFieldKeyDown = (e, nextFieldRef) => {
+  const handleFieldKeyDown = (e, nextFieldRef, currentValue, validator) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+
+      if (validator && !validator(currentValue)) {
+        console.log('Date is not complete. Staying in same field.');
+        return;
+      }
+
       if (nextFieldRef && nextFieldRef.current) {
         nextFieldRef.current.focus();
       }
@@ -214,8 +234,8 @@ const Order = ({ onBack }) => {
     setItem('');
     setDeliveryDate('');
     setDeliveryMode('');
-    setTransporterName('');
     setQuantity('');
+    setTransporterName('');
     itemSelectRef.current.focus();
   };
 
@@ -268,13 +288,10 @@ const Order = ({ onBack }) => {
     const selectedDate = e.target.value;
 
     if (selectedDate && selectedDate < date) {
-      toast.error(
-        'Please enter valid delivery date!',
-        {
-          position: 'bottom-right',
-          autoClose: 4000,
-        },
-      );
+      toast.error('Please enter valid delivery date!', {
+        position: 'bottom-right',
+        autoClose: 4000,
+      });
       setDeliveryDate(''); // Clear the invalid date
       // Keep focus on delivery date field instead of moving to next field
       setTimeout(() => {
@@ -674,7 +691,7 @@ const Order = ({ onBack }) => {
           </div>
         )}
 
-        <div className={`relative ${isDistributorRoute ? 'w-[500px]' : 'w-[280px]'}`}>
+        <div className={`relative ${isDistributorRoute ? 'w-[450px]' : 'w-[280px]'}`}>
           <div className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium text-gray-700 text-center">
             {distributorUser.customer_name || 'executive'}
           </div>
@@ -795,7 +812,14 @@ const Order = ({ onBack }) => {
               min={date} // This prevents selecting past dates in the calendar UI
               onChange={e => handleDeliveryDateChange(e.target.value)}
               onBlur={handleDeliveryDateBlur}
-              onKeyDown={e => handleFieldKeyDown(e, deliveryModeRef)}
+              onKeyDown={e =>
+                handleFieldKeyDown(
+                  e,
+                  deliveryModeRef,
+                  deliveryDate,
+                  isValidDate, // pass validator
+                )
+              }
               className="border p-[3.5px] rounded-[5px] border-[#932F67] text-sm font-medium w-full bg-white cursor-pointer"
             />
             <span
@@ -823,7 +847,7 @@ const Order = ({ onBack }) => {
             </span>
           </div>
 
-          <div className="relative w-36">
+          <div className="relative w-40">
             <input
               type="text"
               ref={transporterNameRef}
@@ -863,7 +887,7 @@ const Order = ({ onBack }) => {
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end ml-5.5">
             <input
               type="button"
               ref={buttonRef}
@@ -885,14 +909,8 @@ const Order = ({ onBack }) => {
                 <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-24">
                   Product Code
                 </th>
-                <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[400px] text-center">
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[300px] text-center">
                   Product Name
-                </th>
-                <th className="font-medium text-sm border border-gray-300 py-0.5 text-center w-16">
-                  HSN
-                </th>
-                <th className="font-medium text-sm border border-gray-300 py-0.5 px-1 w-14 text-center">
-                  GST %
                 </th>
                 <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-center w-12">
                   Qty
@@ -903,6 +921,18 @@ const Order = ({ onBack }) => {
                 </th>
                 <th className="font-medium text-sm border border-gray-300 py-0.5 w-[86px]">
                   Amount
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 text-center w-16">
+                  HSN
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 px-1 w-14 text-center">
+                  GST %
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 text-center w-16">
+                  Dely.Date
+                </th>
+                <th className="font-medium text-sm border border-gray-300 py-0.5 text-center w-16">
+                  Dely.Mode
                 </th>
                 <th className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-center w-[60px]">
                   Action
@@ -927,22 +957,16 @@ const Order = ({ onBack }) => {
                 ) : (
                   orderData.map((item, index) => (
                     <tr key={index} className="leading-12">
-                      <td className="border border-gray-400 text-center text-sm w-[54px]">
+                      <td className="border border-gray-400 text-center text-sm w-[53px]">
                         {index + 1}
                       </td>
-                      <td className="border border-gray-400 text-left pl-1 text-sm w-[132px]">
+                      <td className="border border-gray-400 text-left pl-1 text-sm w-[126px]">
                         {item.itemCode}
                       </td>
-                      <td className="border border-gray-400 px-2 text-sm w-[548px]">
+                      <td className="border border-gray-400 px-2 text-sm w-[399px]">
                         {item.itemName}
                       </td>
-                      <td className="border border-gray-400 text-center text-sm w-[88px]">
-                        {item.hsn}
-                      </td>
-                      <td className="border border-gray-400 text-center text-sm w-[76px]">
-                        {item.gst}
-                      </td>
-                      <td className="border border-gray-400 px-2 text-right text-sm bg-[#F8F4EC] w-[66px]">
+                      <td className="border border-gray-400 px-2 text-right text-sm bg-[#F8F4EC] w-[64px]">
                         <input
                           type="text"
                           value={item.itemQty === 0 ? '' : item.itemQty}
@@ -958,14 +982,26 @@ const Order = ({ onBack }) => {
                           className="w-[47px] text-right border-none outline-none bg-transparent px-1"
                         />
                       </td>
-                      <td className="border border-gray-400 text-center text-sm w-[55px]">
+                      <td className="border border-gray-400 text-center text-sm w-[53px]">
                         {item.uom}
                       </td>
-                      <td className="border border-gray-400  px-2 text-right text-sm w-[116px]">
+                      <td className="border border-gray-400  px-2 text-right text-sm w-[112px]">
                         {formatCurrency(item.rate)}
                       </td>
-                      <td className="border border-gray-400 px-2 text-right text-sm w-[118px]">
+                      <td className="border border-gray-400 px-2 text-right text-sm w-[114px]">
                         {formatCurrency(item.amount)}
+                      </td>
+                      <td className="border border-gray-400 text-center text-sm w-[85px]">
+                        {item.hsn}
+                      </td>
+                      <td className="border border-gray-400 text-center text-sm w-[74px]">
+                        {item.gst}
+                      </td>
+                      <td className="border border-gray-400 text-center text-sm w-[85px]">
+                        {formatDate(item.delivery_date)}
+                      </td>
+                      <td className="border border-gray-400 text-center text-sm w-[90px]">
+                        {item.delivery_mode}
                       </td>
                       <td className="border border-gray-400 text-center text-sm">
                         <button
@@ -985,7 +1021,7 @@ const Order = ({ onBack }) => {
 
         {/* Footer section - remove the mt-[320px] */}
         <div className="h-[7vh] flex border-t items-center">
-          <div className="w-2/4 px-0.5">
+          <div className="w-[500px] px-0.5">
             <div className="relative flex gap-2">
               <textarea
                 name="remarks"
@@ -993,7 +1029,7 @@ const Order = ({ onBack }) => {
                 placeholder="Remarks"
                 value={remarks}
                 onChange={e => setRemarks(e.target.value)}
-                className="border border-[#932F67] resize-none md:w-[400px] outline-none rounded px-1  peer h-[26px] bg-[#F8F4EC] mb-1 ml-1"
+                className="border border-[#932F67] resize-none md:w-[350px] outline-none rounded px-1  peer h-[26px] bg-[#F8F4EC] mb-1 ml-1"
               ></textarea>
 
               <div>
@@ -1011,20 +1047,20 @@ const Order = ({ onBack }) => {
               </div>
             </div>
           </div>
-          <div className="ml-44">
+          <div className="">
             <p className="font-medium pr-2 mb-0.5">Total</p>
           </div>
           <div className="w-[375px] px-0.5 py-1">
             <table className="w-full border-b mb-1">
               <tfoot>
                 <tr className="*:border-[#932F67]">
-                  <td className="text-right border w-8 px-1">{totals.qty}</td>
-                  <td className="text-right border w-28 px-1">{formatCurrency(totals.amount)}</td>
+                  <td className="text-right border w-6 px-1">{totals.qty}</td>
+                  <td className="text-right border w-20 px-1">{formatCurrency(totals.amount)}</td>
                 </tr>
               </tfoot>
             </table>
           </div>
-          <div className=" mb-1 ml-0.5">
+          <div className=" mb-1 -ml-[-345px]">
             <button
               onClick={handleSubmit}
               className="bg-[#693382] text-white px-4 rounded-[6px] py-0.5 outline-none cursor-pointer"

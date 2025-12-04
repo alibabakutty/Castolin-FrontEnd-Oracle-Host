@@ -445,11 +445,18 @@ const OrderReportPage = () => {
     return true; // validation passed
   };
 
-  // Format for display - show as whole number
   const formatQuantityForDisplay = quantity => {
-    const num = Number(quantity) || 0;
-    // Remove any decimal places for display
-    return Math.floor(num).toString();
+    if (quantity === null || quantity === undefined) return '0';
+
+    let str = quantity.toString().trim();
+
+    // remove commas
+    str = str.replace(/,/g, '');
+
+    // keep only part before decimal
+    const beforeDecimal = str.split('.')[0];
+
+    return beforeDecimal === '' ? '0' : beforeDecimal;
   };
 
   // Function to handle discount percentage change
@@ -676,69 +683,69 @@ const OrderReportPage = () => {
       .replace(/^₹/, '₹ ');
   };
 
-  const customStyles = {
-    control: (base, state) => {
-      let customWidth = '500px';
-      if (windowWidth <= 768) {
-        customWidth = '100%';
-      } else if (windowWidth <= 1024) {
-        customWidth = '200px';
-      } else if (windowWidth <= 1280) {
-        customWidth = '250px';
-      } else if (windowWidth <= 1366) {
-        customWidth = '300px';
-      }
-      return {
-        ...base,
-        minHeight: '26px',
-        height: '26px',
-        padding: '0 1px',
-        width: customWidth,
-        backgroundColor: '#E9EFEC',
-        borderColor: '#932F67',
-        boxShadow: 'none',
-      };
-    },
-    valueContainer: base => ({
-      ...base,
-      padding: '0px 4px',
-      height: '20px',
-    }),
-    menu: base => {
-      let customWidth = '550px';
-      if (windowWidth <= 768) {
-        customWidth = '100%';
-      } else if (windowWidth <= 1024) {
-        customWidth = '350px';
-      } else if (windowWidth <= 1366) {
-        customWidth = '400px';
-      }
-      return {
-        ...base,
-        width: customWidth,
-        overflowY: 'auto',
-        zIndex: 9999,
-        border: '1px solid #ddd',
-      };
-    },
-    option: (base, state) => ({
-      ...base,
-      padding: '8px 12px',
-      backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
-      color: 'black',
-      cursor: 'pointer',
-    }),
-    menuList: base => ({
-      ...base,
-      padding: 0,
-      minHeight: '55vh',
-    }),
-    input: base => ({
-      ...base,
-      margin: 0,
-      padding: 0,
-    }),
-  };
+  // const customStyles = {
+  //   control: (base, state) => {
+  //     let customWidth = '500px';
+  //     if (windowWidth <= 768) {
+  //       customWidth = '100%';
+  //     } else if (windowWidth <= 1024) {
+  //       customWidth = '200px';
+  //     } else if (windowWidth <= 1280) {
+  //       customWidth = '250px';
+  //     } else if (windowWidth <= 1366) {
+  //       customWidth = '300px';
+  //     }
+  //     return {
+  //       ...base,
+  //       minHeight: '26px',
+  //       height: '26px',
+  //       padding: '0 1px',
+  //       width: customWidth,
+  //       backgroundColor: '#E9EFEC',
+  //       borderColor: '#932F67',
+  //       boxShadow: 'none',
+  //     };
+  //   },
+  //   valueContainer: base => ({
+  //     ...base,
+  //     padding: '0px 4px',
+  //     height: '20px',
+  //   }),
+  //   menu: base => {
+  //     let customWidth = '550px';
+  //     if (windowWidth <= 768) {
+  //       customWidth = '100%';
+  //     } else if (windowWidth <= 1024) {
+  //       customWidth = '350px';
+  //     } else if (windowWidth <= 1366) {
+  //       customWidth = '400px';
+  //     }
+  //     return {
+  //       ...base,
+  //       width: customWidth,
+  //       overflowY: 'auto',
+  //       zIndex: 9999,
+  //       border: '1px solid #ddd',
+  //     };
+  //   },
+  //   option: (base, state) => ({
+  //     ...base,
+  //     padding: '8px 12px',
+  //     backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
+  //     color: 'black',
+  //     cursor: 'pointer',
+  //   }),
+  //   menuList: base => ({
+  //     ...base,
+  //     padding: 0,
+  //     minHeight: '55vh',
+  //   }),
+  //   input: base => ({
+  //     ...base,
+  //     margin: 0,
+  //     padding: 0,
+  //   }),
+  // };
 
   return (
     <div className="font-amasis p-3 bg-[#E9EFEC] border-2 h-screen">
@@ -855,7 +862,7 @@ const OrderReportPage = () => {
                   : option.item_code
               }
               styles={{
-                ...customStyles,
+                // ...customStyles,
                 control: base => ({
                   ...base,
                   minHeight: '30px',
@@ -1028,10 +1035,10 @@ const OrderReportPage = () => {
                 <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[95px]">
                   Item Code
                 </td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[350px] text-center">
+                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 w-[250px] text-center">
                   Product Name
                 </td>
-                <td className="font-medium text-sm border border-gray-300 py-0.5 px-2 text-right w-8">
+                <td className="font-medium text-sm border border-gray-300 py-0.5 text-center w-24">
                   Qty
                 </td>
                 <td className="font-medium text-sm border border-gray-300 py-0.5 px-0.3">UOM</td>
@@ -1212,8 +1219,6 @@ const OrderReportPage = () => {
                   {/* <td className="w-10 border"></td> */}
 
                   <td className="text-right border w-12 px-1">{formatCurrency(totals.amount)}</td>
-
-                  
 
                   {/* <td className="text-right border w-32 px-1"></td> */}
 

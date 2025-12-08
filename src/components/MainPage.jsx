@@ -14,7 +14,6 @@ const MainPage = () => {
   const handleCorporateLogin = () => {
     navigate('/corporate-login');
   };
-
   console.log('Current API URL:', import.meta.env.VITE_API_URL);
 
   return (

@@ -25,7 +25,7 @@ const OrderReportPage = () => {
   const executiveSelectRef = useRef(null);
   const quantityInputRef = useRef(null);
   const buttonRef = useRef(null);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  // const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [database, setDatabase] = useState([]);
   const [itemOptions, setItemOptions] = useState([]); // Separate state for items
   const [orderData, setOrderData] = useState([]);
@@ -141,12 +141,12 @@ const OrderReportPage = () => {
     return `${year}-${month}-${day}`; // Returns "2025-10-31" for date input
   };
 
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
+  // useEffect(() => {
+  //   const handleResize = () => setWindowWidth(window.innerWidth);
+  //   window.addEventListener('resize', handleResize);
 
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  //   return () => window.removeEventListener('resize', handleResize);
+  // }, []);
 
   useEffect(() => {
     const fetchStockItems = async () => {
@@ -684,69 +684,69 @@ const OrderReportPage = () => {
   };
 
 
-  const customStyles = {
-    control: (base) => {
-      let customWidth = '500px';
-      if (windowWidth <= 768) {
-        customWidth = '100%';
-      } else if (windowWidth <= 1024) {
-        customWidth = '200px';
-      } else if (windowWidth <= 1280) {
-        customWidth = '250px';
-      } else if (windowWidth <= 1366) {
-        customWidth = '300px';
-      }
-      return {
-        ...base,
-        minHeight: '26px',
-        height: '26px',
-        padding: '0 1px',
-        width: customWidth,
-        backgroundColor: '#E9EFEC',
-        borderColor: '#932F67',
-        boxShadow: 'none',
-      };
-    },
-    valueContainer: base => ({
-      ...base,
-      padding: '0px 4px',
-      height: '20px',
-    }),
-    menu: base => {
-      let customWidth = '550px';
-      if (windowWidth <= 768) {
-        customWidth = '100%';
-      } else if (windowWidth <= 1024) {
-        customWidth = '350px';
-      } else if (windowWidth <= 1366) {
-        customWidth = '400px';
-      }
-      return {
-        ...base,
-        width: customWidth,
-        overflowY: 'auto',
-        zIndex: 9999,
-        border: '1px solid #ddd',
-      };
-    },
-    option: (base, state) => ({
-      ...base,
-      padding: '8px 12px',
-      backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
-      color: 'black',
-      cursor: 'pointer',
-    }),
-    menuList: base => ({
-      ...base,
-      padding: 0,
-      minHeight: '55vh',
-    }),
-    input: base => ({
-      ...base,
-      margin: 0,
-      padding: 0,
-    }),
-  };
+  // const customStyles = {
+  //   control: (base) => {
+  //     let customWidth = '500px';
+  //     if (windowWidth <= 768) {
+  //       customWidth = '100%';
+  //     } else if (windowWidth <= 1024) {
+  //       customWidth = '200px';
+  //     } else if (windowWidth <= 1280) {
+  //       customWidth = '250px';
+  //     } else if (windowWidth <= 1366) {
+  //       customWidth = '300px';
+  //     }
+  //     return {
+  //       ...base,
+  //       minHeight: '26px',
+  //       height: '26px',
+  //       padding: '0 1px',
+  //       width: customWidth,
+  //       backgroundColor: '#E9EFEC',
+  //       borderColor: '#932F67',
+  //       boxShadow: 'none',
+  //     };
+  //   },
+  //   valueContainer: base => ({
+  //     ...base,
+  //     padding: '0px 4px',
+  //     height: '20px',
+  //   }),
+  //   menu: base => {
+  //     let customWidth = '550px';
+  //     if (windowWidth <= 768) {
+  //       customWidth = '100%';
+  //     } else if (windowWidth <= 1024) {
+  //       customWidth = '350px';
+  //     } else if (windowWidth <= 1366) {
+  //       customWidth = '400px';
+  //     }
+  //     return {
+  //       ...base,
+  //       width: customWidth,
+  //       overflowY: 'auto',
+  //       zIndex: 9999,
+  //       border: '1px solid #ddd',
+  //     };
+  //   },
+  //   option: (base, state) => ({
+  //     ...base,
+  //     padding: '8px 12px',
+  //     backgroundColor: state.isFocused ? '#f0f0f0' : 'white',
+  //     color: 'black',
+  //     cursor: 'pointer',
+  //   }),
+  //   menuList: base => ({
+  //     ...base,
+  //     padding: 0,
+  //     minHeight: '55vh',
+  //   }),
+  //   input: base => ({
+  //     ...base,
+  //     margin: 0,
+  //     padding: 0,
+  //   }),
+  // };
 
   // const customStyles = {
   //   control: (base, state) => {

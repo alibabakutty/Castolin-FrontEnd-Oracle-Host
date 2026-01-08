@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Order from '../orders-page/Order';
+// import Order from '../orders-page/Order';
 import { logout } from '../../auth/auth';
 import { toast } from 'react-toastify';
 import ViewFetchDistributor from '../reports-page/ViewFetchDistributor';
 import { useAuth } from '../../context/authConstants';
+import NewOrder from '../orders-page/NewOrder';
 
 const DistributorDashboard = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -13,15 +14,15 @@ const DistributorDashboard = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const handleEscapeKey = (event) => {
+    const handleEscapeKey = event => {
       if (event.key === 'Escape') {
         handleLogout();
       }
-    }
+    };
     document.addEventListener('keydown', handleEscapeKey);
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
-    }
+    };
   }, [navigate]);
 
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -49,9 +50,9 @@ const DistributorDashboard = () => {
 
   // Show only Dashboard for now (you can add other pages later)
   if (currentPage === 'order-management') {
-    return <Order onBack={() => setCurrentPage('dashboard')} />;
+    return <NewOrder onBack={() => setCurrentPage('dashboard')} />;
   } else if (currentPage === 'fetch-distributor') {
-    return <ViewFetchDistributor onBack={() => setCurrentPage('dashboard')} />
+    return <ViewFetchDistributor onBack={() => setCurrentPage('dashboard')} />;
   }
 
   // Logout function
@@ -124,7 +125,12 @@ const DistributorDashboard = () => {
                 </span>
                 {user.role && (
                   <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">
-                    {user.role}
+                    {user.role || 'not given'}
+                  </span>
+                )}
+                {user?.state && (
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                    {user.state || 'not given'}
                   </span>
                 )}
               </div>
@@ -208,7 +214,7 @@ const DistributorDashboard = () => {
           </div>
         </button>
 
-         {/* Sales Report Button */}
+        {/* Sales Report Button */}
         <button
           onClick={() => setCurrentPage('fetch-distributor')}
           className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 group w-full"

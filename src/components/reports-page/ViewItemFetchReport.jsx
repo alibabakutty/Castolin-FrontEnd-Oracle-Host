@@ -21,7 +21,7 @@ const ViewItemFetchReport = ({ onBack }) => {
   const columns = [
     { key: 'date', label: 'Date', width: '75px', align: 'center' },
     { key: 'voucher_type', label: 'Vch Type', width: '170px', align: 'left' },
-    { key: 'order_no', label: 'Vch No.', width: '120px', align: 'left' },
+    { key: 'order_no', label: 'Vch No.', width: '110px', align: 'left' },
     { key: 'customer_code', label: 'Code', width: '60px', align: 'left' },
     { key: 'customer_name', label: 'Customer', width: '270px', align: 'left' },
     { key: 'executive', label: 'Executive', width: '260px', align: 'left' },
@@ -32,7 +32,7 @@ const ViewItemFetchReport = ({ onBack }) => {
     { key: 'delivery_date', label: 'Dely. Date', width: '75px', align: 'center' },
     { key: 'delivery_mode', label: 'Dely. Mode', width: '80px', align: 'left' },
     { key: 'status', label: 'Status', width: '75px', align: 'left' },
-    { key: 'gross_amount', label: 'Amount', width: '90px', align: 'right' },
+    { key: 'total_amount', label: 'Amount', width: '100px', align: 'right' },
   ];
 
   // Filter orders based on search term
@@ -81,19 +81,21 @@ const ViewItemFetchReport = ({ onBack }) => {
   const scrollToSelectedCell = useCallback(() => {
     if (horizontalScrollRef.current && selectedCol >= 0) {
       const container = horizontalScrollRef.current;
-      const selectedCell = container.querySelector(`[data-cell-row="${selectedRow}"][data-cell-col="${selectedCol}"]`);
-      
+      const selectedCell = container.querySelector(
+        `[data-cell-row="${selectedRow}"][data-cell-col="${selectedCol}"]`,
+      );
+
       if (selectedCell) {
         const containerRect = container.getBoundingClientRect();
         const cellRect = selectedCell.getBoundingClientRect();
-        
+
         // Check if cell is outside visible area
         if (cellRect.left < containerRect.left) {
           // Cell is to the left of visible area
-          container.scrollLeft -= (containerRect.left - cellRect.left + 10);
+          container.scrollLeft -= containerRect.left - cellRect.left + 10;
         } else if (cellRect.right > containerRect.right) {
           // Cell is to the right of visible area
-          container.scrollLeft += (cellRect.right - containerRect.right + 10);
+          container.scrollLeft += cellRect.right - containerRect.right + 10;
         }
       }
     }
@@ -219,12 +221,46 @@ const ViewItemFetchReport = ({ onBack }) => {
         setError(null);
 
         const response = await api.get('/orders');
-        const ordersData = response.data;
 
-        setAllOrders(ordersData);
-        setFilteredOrders(ordersData);
+        const list = Array.isArray(response.data?.data) ? response.data.data : [];
+
+        const formattedOrders = list.map(order => ({
+          voucher_type: order.VOUCHER_TYPE || '',
+          order_no: order.ORDER_NO || '',
+          customer_code: order.CUSTOMER_CODE || '',
+          customer_name: order.CUSTOMER_NAME || '',
+          executive: order.EXECUTIVE || '',
+          role: order.ROLE || '',
+          item_code: order.ITEM_CODE || '',
+          item_name: order.ITEM_NAME || '',
+          hsn: order.HSN || '',
+          gst: order.GST || '',
+          sgst: order.SGST || '',
+          cgst: order.CGST || '',
+          igst: order.IGST || '',
+          quantity: order.QUANTITY || 0,
+          uom: order.UOM || '',
+          rate: order.RATE || 0,
+          amount: order.AMOUNT || 0,
+          disc_percentage: order.DISC_PERCENTAGE || 0,
+          disc_amount: order.DISC_AMOUNT || 0,
+          spl_disc_percentage: order.SPL_DISC_PERCENTAGE || 0,
+          delivery_date: order.DELIVERY_DATE || '',
+          delivery_mode: order.DELIVERY_MODE || '',
+          total_quantity: order.TOTAL_QUANTITY || 0,
+          total_amount: order.TOTAL_AMOUNT || 0,
+          total_sgst_amount: order.TOTAL_SGST_AMOUNT || 0,
+          total_cgst_amount: order.TOTAL_CGST_AMOUNT || 0,
+          total_igst_amount: order.TOTAL_IGST_AMOUNT || 0,
+          status: order.STATUS || '',
+          remarks: order.REMARKS || '',
+          created_at: order.CREATED_AT || '',
+        }));
+
+        setAllOrders(formattedOrders);
+        setFilteredOrders(formattedOrders);
         setHasFetched(true);
-        console.log('Pending orders:', ordersData);
+        console.log('Pending orders:', formattedOrders);
       } catch (error) {
         console.error('Error fetching orders:', error);
         setError('Failed to fetch orders');
@@ -294,6 +330,11 @@ const ViewItemFetchReport = ({ onBack }) => {
         return order.executive?.toUpperCase();
       case 'status':
         return order.status?.toUpperCase();
+      case 'total_amount':
+        return `₹ ${Number(order.total_amount || 0).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+        })}`;
+
       default:
         return order[columnKey] || '';
     }
@@ -365,16 +406,26 @@ const ViewItemFetchReport = ({ onBack }) => {
                             isCellSelected ? 'bg-blue-200 ring-2 ring-blue-500' : ''
                           }`}
                           style={{ width: column.width }}
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             handleCellClick(rowIndex, colIndex);
                           }}
                         >
-                          <div className={`whitespace-normal break-words ${
-                            column.key === 'amount' ? 'text-right' : 
-                            column.key === 'customer_name' || column.key === 'executive' || 
-                            column.key === 'item_name' ||column.key === 'voucher_type' || column.key === 'item_code' || column.key === 'delivery_mode' || column.key === 'status' ? 'text-left' : 'text-center'
-                          }`}>
+                          <div
+                            className={`whitespace-normal break-words ${
+                              column.key === 'amount'
+                                ? 'text-right'
+                                : column.key === 'customer_name' ||
+                                  column.key === 'executive' ||
+                                  column.key === 'item_name' ||
+                                  column.key === 'voucher_type' ||
+                                  column.key === 'item_code' ||
+                                  column.key === 'delivery_mode' ||
+                                  column.key === 'status'
+                                ? 'text-left'
+                                : 'text-center'
+                            }`}
+                          >
                             {getCellValue(order, column.key)}
                           </div>
                         </div>
@@ -424,19 +475,17 @@ const ViewItemFetchReport = ({ onBack }) => {
           </div>
 
           {/* Main Container with Horizontal Scroll */}
-          <div 
-            className="w-full overflow-x-auto"
-            ref={horizontalScrollRef}
-          >
+          <div className="w-full overflow-x-auto" ref={horizontalScrollRef}>
             <div className="min-w-[1810px]">
-              
               {/* Column Headers - Single Row */}
               <div className="flex items-center border-b border-gray-300 bg-gray-100 text-[14px] font-amasis font-medium text-gray-700">
                 {columns.map((column, colIndex) => (
                   <div
                     key={column.key}
                     className={`flex-shrink-0 px-1 border-r border-gray-300 last:border-r-0 ${
-                      selectedCol === colIndex && selectedRow === -1 ? 'bg-blue-200 ring-2 ring-blue-500' : ''
+                      selectedCol === colIndex && selectedRow === -1
+                        ? 'bg-blue-200 ring-2 ring-blue-500'
+                        : ''
                     }`}
                     style={{ width: column.width }}
                   >

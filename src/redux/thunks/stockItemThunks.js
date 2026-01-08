@@ -21,7 +21,18 @@ export const fetchAllStockItems = createAsyncThunk(
 export const fetchStockItemByItemCode = createAsyncThunk('stockItemData/fetchStockItemByItemCode', async (itemCode, { rejectWithValue }) => {
     try {
         const response = await api.get(`/stock_item/${itemCode}`);
-        return response.data;
+        const d = response.data?.data;
+
+        const normalized = {
+            item_code: d.ITEM_CODE,
+            stock_item_name: d.STOCK_ITEM_NAME,
+            hsn: d.HSN,
+            gst: d.GST,
+            uom: d.UOM,
+            rate: d.RATE,
+        };
+
+        return normalized;
     } catch (error) {
         console.error(`Error fetching stock item with ID ${itemCode}`, error);
         return rejectWithValue(

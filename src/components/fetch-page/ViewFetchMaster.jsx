@@ -24,11 +24,11 @@ const ViewFetchMaster = () => {
       itemName: 'items',
       createLink: '/inventory-master',
       fields: {
-        primary: 'stock_item_name',
-        code: 'item_code',
-        category: 'hsn',
-        quantity: 'gst',
-        price: 'rate',
+        primary: 'STOCK_ITEM_NAME',
+        code: 'ITEM_CODE',
+        category: 'HSN',
+        quantity: 'GST',
+        price: 'RATE',
         description: 'description',
       },
     },
@@ -39,9 +39,9 @@ const ViewFetchMaster = () => {
       itemName: 'customers',
       createLink: '/customer-master',
       fields: {
-        primary: 'customer_name',
-        code: 'customer_code',
-        email: 'mobile_number',
+        primary: 'CUSTOMER_NAME',
+        code: 'CUSTOMER_CODE',
+        email: 'MOBILE_NUMBER',
         phone: 'customer_type',
         address: 'address',
         company: 'company_name',
@@ -54,28 +54,28 @@ const ViewFetchMaster = () => {
       itemName: 'distributors',
       createLink: '/distributor-master',
       fields: {
-        primary: 'customer_name',
-        code: 'customer_code',
-        mobile: 'mobile_number',
+        primary: 'CUSTOMER_NAME',
+        code: 'CUSTOMER_CODE',
+        mobile: 'MOBILE_NUMBER',
         email: 'email',
         role: 'role',
-        status: 'status',
+        status: 'STATUS',
         department: 'department',
       },
     },
     direct: {
       title: 'Direct Orders',
-      apiEndpoint: '/corporates',
+      apiEndpoint: '/corpoRATEs',
       searchPlaceholder: 'Search by code, name, mobile number...',
       itemName: 'direct orders',
-      createLink: '/corporate-master',
+      createLink: '/corpoRATE-master',
       fields: {
-        primary: 'customer_name',
-        code: 'customer_code',
-        mobile: 'mobile_number',
+        primary: 'CUSTOMER_NAME',
+        code: 'CUSTOMER_CODE',
+        mobile: 'MOBILE_NUMBER',
         email: 'email',
         role: 'role',
-        status: 'status',
+        status: 'STATUS',
         department: 'department',
       },
     },
@@ -196,11 +196,13 @@ const ViewFetchMaster = () => {
 
         const response = await api.get(currentModule.apiEndpoint);
 
-        // Batch state updates
-        setData(response.data);
-        setFilteredData(response.data);
+        const list = Array.isArray(response.data?.data) ? response.data.data : [];
+
+        setData(list);
+        setFilteredData(list);
         setHasFetched(true);
-        console.log(`${currentModule.title} data:`, response.data);
+
+        console.log(`${currentModule.title} list:`, list);
       } catch (error) {
         console.error(`Error fetching ${currentModule.title.toLowerCase()}:`, error);
         setError(`Failed to fetch ${currentModule.title.toLowerCase()}`);
@@ -227,19 +229,19 @@ const ViewFetchMaster = () => {
   };
 
   const handleInventoryClick = item => {
-    navigate(`/inventory-view/${item.item_code}`);
+    navigate(`/inventory-view/${item.ITEM_CODE}`);
   };
 
   const handleCustomerClick = item => {
-    navigate(`/customer-view/${item.customer_code}`);
+    navigate(`/customer-view/${item.CUSTOMER_CODE}`);
   };
 
   const handleDistributorClick = item => {
-    navigate(`/distributor-view/${item.customer_code}`);
+    navigate(`/distributor-view/${item.CUSTOMER_CODE}`);
   };
 
-  const handleCorporateClick = item => {
-    navigate(`/corporate-view/${item.customer_code}`);
+  const handleCorpoRATEClick = item => {
+    navigate(`/corporate-view/${item.CUSTOMER_CODE}`);
   };
 
   // Handle item click based on type
@@ -257,7 +259,7 @@ const ViewFetchMaster = () => {
         handleDistributorClick(item);
         break;
       case 'direct':
-        handleCorporateClick(item);
+        handleCorpoRATEClick(item);
         break;
       default:
         break;
@@ -276,16 +278,16 @@ const ViewFetchMaster = () => {
           return (
             <div className="w-full flex items-center text-[12px]">
               {/* Code - 12% */}
-              <div className="w-[15%] text-gray-800 truncate">{item.item_code}</div>
+              <div className="w-[15%] text-gray-800 truncate">{item.ITEM_CODE}</div>
               {/* Name - 50% (Increased for full name display) */}
-              <div className="w-[50%] text-gray-800 truncate">{item.stock_item_name}</div>
+              <div className="w-[50%] text-gray-800 truncate">{item.STOCK_ITEM_NAME}</div>
               {/* HSN - 10% (Reduced) */}
-              <div className="w-[10%] text-gray-800 truncate text-center">{item.hsn}</div>
+              <div className="w-[10%] text-gray-800 truncate text-center">{item.HSN}</div>
               {/* GST - 10% (Reduced) */}
-              <div className="w-[10%] text-gray-800 truncate text-center">{item.gst} %</div>
-              {/* Rate - 18% (Reduced) */}
+              <div className="w-[10%] text-gray-800 truncate text-center">{item.GST} %</div>
+              {/* RATE - 18% (Reduced) */}
               <div className="w-[18%] text-gray-800 truncate text-right">
-                ₹ {parseFloat(item.rate || 0).toFixed(2)}
+                ₹ {parseFloat(item.RATE || 0).toFixed(2)}
               </div>
             </div>
           );
@@ -294,13 +296,13 @@ const ViewFetchMaster = () => {
           return (
             <div className="w-full flex items-center text-[12px]">
               {/* Code - 20% */}
-              <div className="w-[20%] text-gray-800 truncate">{item.customer_code}</div>
+              <div className="w-[20%] text-gray-800 truncate">{item.CUSTOMER_CODE}</div>
               {/* Name - 40% */}
-              <div className="w-[45%] text-gray-800 truncate">{item.customer_name}</div>
+              <div className="w-[45%] text-gray-800 truncate">{item.CUSTOMER_NAME}</div>
               {/* Mobile - 20% */}
-              <div className="w-[17%] text-gray-800 truncate">{item.mobile_number}</div>
+              <div className="w-[17%] text-gray-800 truncate">{item.MOBILE_NUMBER}</div>
               {/* Type - 20% */}
-              <div className="w-[15%] text-gray-800 truncate">{item.role?.toUpperCase()}</div>
+              <div className="w-[15%] text-gray-800 truncate">{item.ROLE?.toUpperCase()}</div>
             </div>
           );
 
@@ -308,18 +310,18 @@ const ViewFetchMaster = () => {
           return (
             <div className="w-full flex items-center text-[12px]">
               {/* Code - 12% (Reduced) */}
-              <div className="w-[12%] text-gray-800 truncate">{item.customer_code}</div>
+              <div className="w-[12%] text-gray-800 truncate">{item.CUSTOMER_CODE}</div>
               {/* Name - 50% (Increased for full name display) */}
-              <div className="w-[50%] text-gray-800 truncate">{item.customer_name}</div>
+              <div className="w-[50%] text-gray-800 truncate">{item.CUSTOMER_NAME}</div>
               {/* Mobile - 15% (Reduced) */}
-              <div className="w-[15%] text-gray-800 truncate">{item.mobile_number}</div>
+              <div className="w-[15%] text-gray-800 truncate">{item.MOBILE_NUMBER}</div>
               {/* Type - 13% (Reduced) */}
               <div className="w-[13%] text-gray-800 truncate">
                 {item.customer_type?.toUpperCase()}
               </div>
               {/* Status - 10% (Reduced) */}
               <div className="w-[10%] text-gray-800 truncate text-center">
-                {item.status?.toUpperCase()}
+                {item.STATUS?.toUpperCase()}
               </div>
             </div>
           );
@@ -328,18 +330,18 @@ const ViewFetchMaster = () => {
           return (
             <div className="w-full flex items-center text-[12px]">
               {/* Code - 12% (Reduced) */}
-              <div className="w-[12%] text-gray-800 truncate">{item.customer_code}</div>
+              <div className="w-[12%] text-gray-800 truncate">{item.CUSTOMER_CODE}</div>
               {/* Name - 50% (Increased for full name display) */}
-              <div className="w-[50%] text-gray-800 truncate">{item.customer_name}</div>
+              <div className="w-[50%] text-gray-800 truncate">{item.CUSTOMER_NAME}</div>
               {/* Mobile - 15% (Reduced) */}
-              <div className="w-[15%] text-gray-800 truncate">{item.mobile_number}</div>
+              <div className="w-[15%] text-gray-800 truncate">{item.MOBILE_NUMBER}</div>
               {/* Type - 13% (Reduced) */}
               <div className="w-[13%] text-gray-800 truncate">
                 {item.customer_type?.toUpperCase()}
               </div>
               {/* Status - 10% (Reduced) */}
               <div className="w-[10%] text-gray-800 truncate text-center">
-                {item.status?.toUpperCase()}
+                {item.STATUS?.toUpperCase()}
               </div>
             </div>
           );
@@ -351,7 +353,7 @@ const ViewFetchMaster = () => {
 
     return (
       <li
-        key={item.id || item.item_code || item.customer_code || index}
+        key={item.id || item.ITEM_CODE || item.CUSTOMER_CODE || index}
         className={`border-b border-gray-300 py-1 px-3 transition-colors cursor-pointer ${
           isSelected ? 'bg-yellow-100 border-yellow-300' : 'hover:bg-blue-50'
         }`}
@@ -461,10 +463,15 @@ const ViewFetchMaster = () => {
               {/* Header columns */}
               <div className="w-full flex text-xs font-medium">
                 {/* Code column */}
-                <div className={`${
-                  type === 'customer' ? 'w-[20%]' : 
-                  (type === 'inventory' || type === 'distributor' || type === 'direct') ? 'w-[12%]' : 'w-[15%]'
-                }`}>
+                <div
+                  className={`${
+                    type === 'customer'
+                      ? 'w-[20%]'
+                      : type === 'inventory' || type === 'distributor' || type === 'direct'
+                      ? 'w-[12%]'
+                      : 'w-[15%]'
+                  }`}
+                >
                   {type === 'customer'
                     ? 'Customer Code'
                     : type === 'inventory'
@@ -473,12 +480,17 @@ const ViewFetchMaster = () => {
                     ? 'Dist. Code'
                     : 'Code'}
                 </div>
-                
+
                 {/* Name column - Increased width for better name display */}
-                <div className={`${
-                  type === 'customer' ? 'w-[40%] pl-7' : 
-                  (type === 'inventory' || type === 'distributor' || type === 'direct') ? 'w-[50%] text-center' : 'w-[30%]'
-                }`}>
+                <div
+                  className={`${
+                    type === 'customer'
+                      ? 'w-[40%] pl-7'
+                      : type === 'inventory' || type === 'distributor' || type === 'direct'
+                      ? 'w-[50%] text-center'
+                      : 'w-[30%]'
+                  }`}
+                >
                   {type === 'customer'
                     ? 'Customer Name'
                     : type === 'inventory'
@@ -490,19 +502,29 @@ const ViewFetchMaster = () => {
 
                 {/* Conditional columns */}
                 {type !== 'inventory' && (
-                  <div className={`${
-                    type === 'customer' ? 'w-[20%] pl-4' : 
-                    (type === 'distributor' || type === 'direct') ? 'w-[15%]' : 'w-[20%]'
-                  }`}>
+                  <div
+                    className={`${
+                      type === 'customer'
+                        ? 'w-[20%] pl-4'
+                        : type === 'distributor' || type === 'direct'
+                        ? 'w-[15%]'
+                        : 'w-[20%]'
+                    }`}
+                  >
                     Mobile Number
                   </div>
                 )}
 
                 {type !== 'inventory' && (
-                  <div className={`${
-                    type === 'customer' ? 'w-[20%] pl-3' : 
-                    (type === 'distributor' || type === 'direct') ? 'w-[13%]' : 'w-[20%]'
-                  }`}>
+                  <div
+                    className={`${
+                      type === 'customer'
+                        ? 'w-[20%] pl-3'
+                        : type === 'distributor' || type === 'direct'
+                        ? 'w-[13%]'
+                        : 'w-[20%]'
+                    }`}
+                  >
                     {type === 'customer' ? 'Role' : 'Type'}
                   </div>
                 )}
@@ -513,8 +535,8 @@ const ViewFetchMaster = () => {
                     {type === 'inventory' && (
                       <>
                         <div className="w-[10%] text-center">HSN Code</div>
-                        <div className="w-[10%] text-center">GST Rate</div>
-                        <div className="w-[18%] text-right">Rate Amount</div>
+                        <div className="w-[10%] text-center">GST RATE</div>
+                        <div className="w-[18%] text-right">RATE Amount</div>
                       </>
                     )}
                     {(type === 'distributor' || type === 'direct') && (

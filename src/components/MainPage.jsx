@@ -14,7 +14,7 @@ const MainPage = () => {
   const handleCorporateLogin = () => {
     navigate('/corporate-login');
   };
-  console.log('Current API URL:', import.meta.env.VITE_API_URL);
+  // console.log('Current API URL:', import.meta.env.VITE_API_URL);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6 font-amasis">

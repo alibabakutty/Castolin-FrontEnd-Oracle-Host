@@ -25,7 +25,17 @@ export const fetchCustomerByCustomerCode = createAsyncThunk(
   async (customerCode, { rejectWithValue }) => {
     try {
       const response = await api.get(`/customer/${customerCode}`);
-      return response.data;
+      const d = response.data?.data;
+
+      const normalized = {
+        customer_code: d.CUSTOMER_CODE,
+        customer_name: d.CUSTOMER_NAME,
+        mobile_number: d.MOBILE_NUMBER,
+        customer_type: d.CUSTOMER_TYPE,
+        email: d.EMAIL,
+        password: d.PASSWORD || '', // never send password from backend
+      };
+      return normalized;
     } catch (error) {
       console.error(`Error fetching customer with ID ${customerCode}:`, error);
       return rejectWithValue(

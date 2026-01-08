@@ -153,11 +153,45 @@ const ViewFetchReport = ({ onBack }) => {
         setError(null);
 
         const response = await api.get('/orders');
-        const ordersData = response.data;
+
+        const list = Array.isArray(response.data?.data) ? response.data.data : [];
+
+        const formattedOrders = list.map(order => ({
+          voucher_type: order.VOUCHER_TYPE || '',
+          order_no: order.ORDER_NO || '',
+          customer_code: order.CUSTOMER_CODE || '',
+          customer_name: order.CUSTOMER_NAME || '',
+          executive: order.EXECUTIVE || '',
+          role: order.ROLE || '',
+          item_code: order.ITEM_CODE || '',
+          item_name: order.ITEM_NAME || '',
+          hsn: order.HSN || '',
+          gst: order.GST || '',
+          sgst: order.SGST || '',
+          cgst: order.CGST || '',
+          igst: order.IGST || '',
+          quantity: order.QUANTITY || 0,
+          uom: order.UOM || '',
+          rate: order.RATE || 0,
+          amount: order.AMOUNT || 0,
+          disc_percentage: order.DISC_PERCENTAGE || 0,
+          disc_amount: order.DISC_AMOUNT || 0,
+          spl_disc_percentage: order.SPL_DISC_PERCENTAGE || 0,
+          delivery_date: order.DELIVERY_DATE || '',
+          delivery_mode: order.DELIVERY_MODE || '',
+          total_quantity: order.TOTAL_QUANTITY || 0,
+          total_amount: order.TOTAL_AMOUNT || 0,
+          total_sgst_amount: order.TOTAL_SGST_AMOUNT || 0,
+          total_cgst_amount: order.TOTAL_CGST_AMOUNT || 0,
+          total_igst_amount: order.TOTAL_IGST_AMOUNT || 0,
+          status: order.STATUS || '',
+          remarks: order.REMARKS || '',
+          created_at: order.CREATED_AT || '',
+        }));
 
         // Get unique pending orders by order_no
-        const pendingUniqueOrders = ordersData.reduce((acc, current) => {
-          const existingOrder = acc.find(order => order.order_no === current.order_no);
+        const pendingUniqueOrders = formattedOrders.reduce((acc, current) => {
+          const existingOrder = acc.find(order => order.ORDER_NO === current.ORDER_NO);
           if (!existingOrder) {
             acc.push(current);
           }

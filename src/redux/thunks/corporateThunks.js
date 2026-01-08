@@ -17,7 +17,20 @@ export const fetchAllCorporates = createAsyncThunk('corporateData/fetchAllCorpor
 export const fetchCorporateByUsercode = createAsyncThunk('corporateData/fetchCorporateByUsercode', async (directOrderCode, { rejectWithValue }) => {
     try {
         const response = await api.get(`/corporates/${directOrderCode}`);
-        return response.data;
+
+        console.log('Corporate Data:', response.data);
+        
+        const d = response.data?.data;
+
+        const normalized = {
+            customer_code: d.CUSTOMER_CODE,
+            customer_name: d.CUSTOMER_NAME,
+            mobile_number: d.MOBILE_NUMBER,
+            customer_type: d.CUSTOMER_TYPE,
+            email: d.EMAIL,
+            password: d.PASSWORD || '',
+        };
+        return normalized;
     } catch (error) {
         console.error(`Error fetching direct order with Usercode ${directOrderCode}`, error);
         return rejectWithValue(

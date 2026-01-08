@@ -141,4 +141,4 @@ const CorporateAuthForm = () => {
   );
 }
 
-export default CorporateAuthForm
+export default CorporateAuthForm;

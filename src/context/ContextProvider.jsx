@@ -16,6 +16,47 @@ const ContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isSigningUp, setIsSigningUp] = useState(false);
 
+  // Helper function to extract user data from various response structures
+  const extractUserData = (responseData) => {
+    if (!responseData) return null;
+    
+    // Structure 1: { success: true, data: {...} }
+    if (responseData.data && typeof responseData.data === 'object') {
+      return responseData.data;
+    }
+    // Structure 2: { success: true, user: {...} }
+    if (responseData.user && typeof responseData.user === 'object') {
+      return responseData.user;
+    }
+    // Structure 3: Array response [{...}]
+    if (Array.isArray(responseData) && responseData.length > 0) {
+      return responseData[0];
+    }
+    // Structure 4: Direct object
+    if (typeof responseData === 'object' && responseData !== null) {
+      return responseData;
+    }
+    
+    return null;
+  };
+
+  // Helper to normalize field names (Oracle returns uppercase)
+  const normalizeUserData = (data) => {
+    if (!data) return null;
+    
+    return {
+      id: data.ID || data.id,
+      username: data.USERNAME || data.username,
+      email: data.EMAIL || data.email,
+      role: data.ROLE || data.role,
+      mobile_number: data.MOBILE_NUMBER || data.mobile_number,
+      customer_name: data.CUSTOMER_NAME || data.customer_name,
+      customer_code: data.CUSTOMER_CODE || data.customer_code,
+      firebase_uid: data.FIREBASE_UID || data.firebase_uid,
+      state: data.STATE || data.state
+    };
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
       // Skip auth state processing during signup
@@ -24,44 +65,55 @@ const ContextProvider = ({ children }) => {
         return;
       }
 
+      setLoading(true);
+
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken();
         let userData = null;
-        let role = null;
-        let distributorData = null;
+        let userRole = null;
+        let userType = null;
 
         try {
+          // Try stored user type first
           const storedUserType = localStorage.getItem('userType');
+          console.log('Stored user type on refresh:', storedUserType);
+
+          // Define endpoints
           const endpointMap = {
             admin: '/me-admin',
             distributor: '/me-distributor',
             corporate: '/me-corporate',
           };
 
-          // Try stored type first if exists
+          // If we have stored type, try that endpoint first
           if (storedUserType && endpointMap[storedUserType]) {
             try {
+              console.log(`Trying stored endpoint: ${endpointMap[storedUserType]}`);
               const res = await api.get(endpointMap[storedUserType], {
                 headers: { Authorization: `Bearer ${token}` },
               });
 
-              if (res.data && res.data[0]) {
-                userData = res.data[0];
-                role = userData.role;
-
-                // Set distributor data if user is distributor
-                if (storedUserType === 'distributor') {
-                  distributorData = userData;
+              console.log(`${storedUserType} response:`, res.data);
+              
+              const extracted = extractUserData(res.data);
+              if (extracted) {
+                userData = normalizeUserData(extracted);
+                if (userData && userData.role) {
+                  userRole = userData.role;
+                  userType = storedUserType;
+                  console.log(`Found ${userType} with role: ${userRole}`);
                 }
               }
-            } finally {
-              console.warn(`${storedUserType} endpoint failed, trying all endpoints`);
+            } catch (err) {
+              console.warn(`${storedUserType} endpoint failed:`, err.message);
+              // Clear invalid stored type
               localStorage.removeItem('userType');
             }
           }
 
-          // Try all endpoints if role not found
-          if (!role) {
+          // If no role found, try all endpoints (admin first since it's most common)
+          if (!userRole) {
+            console.log('Trying all endpoints to find user...');
             const endpoints = [
               { path: '/me-admin', type: 'admin' },
               { path: '/me-distributor', type: 'distributor' },
@@ -70,87 +122,170 @@ const ContextProvider = ({ children }) => {
 
             for (const endpoint of endpoints) {
               try {
+                console.log(`Trying endpoint: ${endpoint.path}`);
                 const res = await api.get(endpoint.path, {
                   headers: { Authorization: `Bearer ${token}` },
                 });
 
-                if (res.data && res.data[0]) {
-                  userData = res.data[0];
-                  role = userData.role;
-
-                  // Set distributor data if user is distributor
-                  if (endpoint.type === 'distributor') {
-                    distributorData = userData;
+                console.log(`${endpoint.type} response:`, res.data);
+                
+                const extracted = extractUserData(res.data);
+                if (extracted) {
+                  userData = normalizeUserData(extracted);
+                  if (userData && userData.role) {
+                    userRole = userData.role;
+                    userType = endpoint.type;
+                    
+                    // Store for next time
+                    localStorage.setItem('userType', userType);
+                    localStorage.setItem('userRole', userRole);
+                    
+                    console.log(`Found user as ${userType} with role: ${userRole}`);
+                    break;
                   }
-
-                  // Persist user type for next time
-                  localStorage.setItem('userType', endpoint.type);
-                  break; // Stop loop if user found
                 }
               } catch (err) {
-                console.error(`Error fetching from ${endpoint.path}`, err);
-                // Automatically continues to next iteration
+                console.warn(`${endpoint.type} endpoint failed:`, err.message);
+                // Continue to next endpoint
               }
             }
           }
 
-          // Set user and role states
-          setUser({
+          // If still no role, set minimal user info
+          if (!userRole) {
+            console.log('No role found in database, setting minimal user info');
+            userData = {
+              email: firebaseUser.email,
+              uid: firebaseUser.uid
+            };
+            userRole = 'unknown';
+            userType = 'unknown';
+          }
+
+          // Set user context
+          const contextUser = {
             ...firebaseUser,
-            role: userData?.role || null,
+            role: userRole,
             username: userData?.username || null,
             customer_name: userData?.customer_name || null,
+            id: userData?.id || null,
+            email: userData?.email || firebaseUser.email,
+            // Store the full user data for reference
+            _userData: userData
+          };
+
+          setUser(contextUser);
+          setRole(userRole);
+          
+          // Set distributor data separately if applicable
+          if (userType === 'distributor') {
+            setDistributorUser(userData);
+          }
+
+          console.log('Auth state updated on refresh:', { 
+            role: userRole, 
+            userType, 
+            email: firebaseUser.email 
           });
 
-          // Set distributor user data separately
-          setDistributorUser(distributorData);
-          setRole(userData?.role || null);
         } catch (err) {
           console.error('Auth state fetch failed:', err);
-          setUser(firebaseUser);
-          setDistributorUser(null);
+          
+          // Fallback: set user with basic info
+          setUser({
+            ...firebaseUser,
+            role: null
+          });
           setRole(null);
+          setDistributorUser(null);
         }
       } else {
+        // No user logged in - clear everything
+        console.log('No user logged in');
         localStorage.removeItem('userType');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userData');
         setUser(null);
         setDistributorUser(null);
         setRole(null);
       }
+      
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [isSigningUp]); // Add isSigningUp as dependency
+  }, [isSigningUp]);
 
   const login = async (email, password) => {
     try {
+      console.log('Admin login attempt for:', email);
       const credential = await signInWithEmailAndPassword(auth, email, password);
-
       const firebaseUser = credential.user;
       const token = await firebaseUser.getIdToken();
+
+      console.log('Firebase login successful, UID:', firebaseUser.uid);
+      console.log('Token obtained, calling /me-admin endpoint...');
 
       const res = await api.get('/me-admin', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const role = res.data[0]?.role || null;
+      console.log("Login response:", res.data);
 
-      // Immediately sync to context
-      setUser({ ...firebaseUser, role });
-      setRole(role);
+      // Extract user data using helper
+      const extracted = extractUserData(res.data);
+      if (!extracted) {
+        throw new Error("No user data received from server");
+      }
 
-      // Return consistent response structure
+      const userData = normalizeUserData(extracted);
+      const userRole = userData.role || 'admin';
+
+      console.log('Extracted user data:', userData);
+      console.log('User role:', userRole);
+
+      // Store in localStorage for persistence
+      localStorage.setItem('userType', 'admin');
+      localStorage.setItem('userRole', userRole);
+      localStorage.setItem('userData', JSON.stringify(userData));
+
+      // Create context user object
+      const contextUser = {
+        ...firebaseUser,
+        role: userRole,
+        username: userData.username,
+        id: userData.id,
+        email: userData.email || firebaseUser.email,
+        _userData: userData
+      };
+
+      // Set state immediately
+      setUser(contextUser);
+      setRole(userRole);
+      setDistributorUser(null);
+
       return {
         success: true,
-        role,
+        role: userRole,
         user: firebaseUser,
+        userData: userData
       };
     } catch (error) {
       console.error('Login failed:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Login failed';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message.includes('auth/')) {
+        errorMessage = 'Invalid email or password';
+      } else if (error.message.includes('404')) {
+        errorMessage = 'Admin account not found. Please contact administrator.';
+      }
+      
       return {
         success: false,
-        message: error.message,
+        message: errorMessage,
       };
     }
   };
@@ -161,25 +296,52 @@ const ContextProvider = ({ children }) => {
       const firebaseUser = credential.user;
       const token = await firebaseUser.getIdToken();
 
-      // Fetch role from backend
+      console.log('Distributor login attempt, calling /me-distributor...');
       const res = await api.get('/me-distributor', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const role = res.data[0]?.role || null;
+      console.log("Distributor login response:", res.data);
 
-      // Immediately sync to context
-      setUser({ ...firebaseUser, role });
-      setRole(role);
+      const extracted = extractUserData(res.data);
+      if (!extracted) {
+        throw new Error("No distributor data received");
+      }
+
+      const userData = normalizeUserData(extracted);
+      const userRole = userData.role || 'distributor';
+
+      // Store in localStorage
+      localStorage.setItem('userType', 'distributor');
+      localStorage.setItem('userRole', userRole);
+      localStorage.setItem('userData', JSON.stringify(userData));
+
+      // Set state
+      const contextUser = {
+        ...firebaseUser,
+        role: userRole,
+        username: userData.customer_name || userData.username,
+        id: userData.customer_code,
+        email: userData.email || firebaseUser.email,
+        _userData: userData
+      };
+
+      setUser(contextUser);
+      setRole(userRole);
+      setDistributorUser(userData);
 
       return {
         success: true,
-        role,
+        role: userRole,
         user: firebaseUser,
+        userData: userData
       };
     } catch (error) {
       console.error('Distributor login failed:', error);
-      return { success: false, message: error.message };
+      return { 
+        success: false, 
+        message: error.response?.data?.error || error.message || 'Distributor login failed' 
+      };
     }
   };
 
@@ -189,28 +351,60 @@ const ContextProvider = ({ children }) => {
       const firebaseUser = credential.user;
       const token = await firebaseUser.getIdToken();
 
-      // fetch role from backend
+      console.log('Corporate login attempt, calling /me-corporate...');
       const res = await api.get('/me-corporate', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const role = res.data[0]?.role || null;
+      console.log("Corporate login response:", res.data);
 
-      // Immediately sync to context
-      setUser({ ...firebaseUser, role });
-      setRole(role);
+      const extracted = extractUserData(res.data);
+      if (!extracted) {
+        throw new Error("No corporate data received");
+      }
+
+      const userData = normalizeUserData(extracted);
+      const userRole = userData.role || 'corporate';
+
+      // Store in localStorage
+      localStorage.setItem('userType', 'corporate');
+      localStorage.setItem('userRole', userRole);
+      localStorage.setItem('userData', JSON.stringify(userData));
+
+      // Set state
+      const contextUser = {
+        ...firebaseUser,
+        role: userRole,
+        username: userData.customer_name || userData.username,
+        id: userData.customer_code,
+        email: userData.email || firebaseUser.email,
+        _userData: userData
+      };
+
+      setUser(contextUser);
+      setRole(userRole);
+      setDistributorUser(null);
 
       return {
         success: true,
-        role,
+        role: userRole,
         user: firebaseUser,
+        userData: userData
       };
     } catch (error) {
       console.error('Corporate login failed:', error);
-      return { success: false, message: error.message };
+      return { 
+        success: false, 
+        message: error.response?.data?.error || error.message || 'Corporate login failed' 
+      };
     }
   };
 
+  // const loginAdmin = async (email = 'admin123@gmail.com', password = '12345678') => {
+  //   return login(email, password);
+  // };
+
+  // Rest of your functions remain the same (signup, createDistributorFirebaseAccount, etc.)
   const signup = async (username, email, password, userType = 'admin', mobileNumber) => {
     setIsSigningUp(true);
     try {
@@ -219,7 +413,7 @@ const ContextProvider = ({ children }) => {
       const firebaseUser = credential.user;
       const token = await firebaseUser.getIdToken();
 
-      // 2. Create user in appropriate MySQL table
+      // 2. Create user in appropriate table
       const endpoint = userType === 'admin' ? '/signup-admin' : 'undefine-signup';
 
       const res = await api.post(
@@ -235,16 +429,29 @@ const ContextProvider = ({ children }) => {
         },
       );
 
+      // Extract response
+      const extracted = extractUserData(res.data);
+      const userData = normalizeUserData(extracted);
+      const userRole = userData?.role || userType;
+
+      // Store for auto-login
+      if (userType === 'admin') {
+        localStorage.setItem('userType', 'admin');
+        localStorage.setItem('userRole', userRole);
+        localStorage.setItem('userData', JSON.stringify(userData));
+      }
+
       return {
         success: true,
-        role: res.data?.role || userType,
+        role: userRole,
         userType: userType,
         message: res.data?.message,
+        userData: userData
       };
     } catch (error) {
       console.error('Signup failed:', error);
 
-      // If Firebase user was created but MySQL failed, delete Firebase user
+      // Cleanup Firebase user if MySQL failed
       if (auth.currentUser) {
         try {
           await auth.currentUser.delete();
@@ -262,7 +469,6 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  // In your Auth Context
   const createDistributorFirebaseAccount = async (usercode, updates, email, password) => {
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
@@ -283,8 +489,8 @@ const ContextProvider = ({ children }) => {
       // Sign out the distributor immediately
       await signOut(auth);
 
-      // ✅ Automatically re-login as admin
-      const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
+      // Automatically re-login as admin
+      // const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
 
       return {
         success: true,
@@ -323,7 +529,7 @@ const ContextProvider = ({ children }) => {
 
       await signOut(auth);
 
-      const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
+      // const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
 
       return {
         success: true,
@@ -339,37 +545,6 @@ const ContextProvider = ({ children }) => {
       return {
         success: false,
         message: error.response?.data?.error || error.message,
-      };
-    }
-  };
-
-  // Add admin login function
-  const loginAdmin = async (email = 'admin123@gmail.com', password = '12345678') => {
-    try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = credential.user;
-      const token = await firebaseUser.getIdToken();
-
-      const res = await api.get('/me-admin', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const role = res.data[0]?.role || null;
-
-      // Immediately sync to context
-      setUser({ ...firebaseUser, role });
-      setRole(role);
-
-      return {
-        success: true,
-        role,
-        user: firebaseUser,
-      };
-    } catch (error) {
-      console.error('Admin re-login failed:', error);
-      return {
-        success: false,
-        message: error.message,
       };
     }
   };
@@ -414,7 +589,12 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  const logout = () => signOut(auth);
+  const logout = () => {
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userData');
+    return signOut(auth);
+  };
 
   return (
     <AuthContext.Provider
@@ -425,7 +605,7 @@ const ContextProvider = ({ children }) => {
         signup,
         createDistributorFirebaseAccount,
         createDirectOrderFirebaseAccount,
-        loginAdmin,
+        // loginAdmin,
         signupDirectOrder,
         login,
         loginDistributor,

@@ -400,9 +400,9 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  // const loginAdmin = async (email = 'admin123@gmail.com', password = '12345678') => {
-  //   return login(email, password);
-  // };
+  const loginAdmin = async (email = 'admin123@gmail.com', password = '12345678') => {
+    return login(email, password);
+  };
 
   // Rest of your functions remain the same (signup, createDistributorFirebaseAccount, etc.)
   const signup = async (username, email, password, userType = 'admin', mobileNumber) => {
@@ -490,7 +490,7 @@ const ContextProvider = ({ children }) => {
       await signOut(auth);
 
       // Automatically re-login as admin
-      // const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
+      const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
 
       return {
         success: true,
@@ -529,7 +529,7 @@ const ContextProvider = ({ children }) => {
 
       await signOut(auth);
 
-      // const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
+      const adminLoginResult = await loginAdmin('admin123@gmail.com', '12345678');
 
       return {
         success: true,
@@ -605,7 +605,7 @@ const ContextProvider = ({ children }) => {
         signup,
         createDistributorFirebaseAccount,
         createDirectOrderFirebaseAccount,
-        // loginAdmin,
+        loginAdmin,
         signupDirectOrder,
         login,
         loginDistributor,

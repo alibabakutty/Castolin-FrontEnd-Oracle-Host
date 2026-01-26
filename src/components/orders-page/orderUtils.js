@@ -116,6 +116,11 @@ export const convertToMySQLDate = (dateStr) => {
   if (!dateStr) return null;
 
   try {
+    // If already YYYY-MM-DD
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return dateStr;  // <-- This should return immediately
+    }
+
     // If DD/MM/YYYY
     if (dateStr.includes('/')) {
       const [day, month, year] = dateStr.split('/');
@@ -124,9 +129,12 @@ export const convertToMySQLDate = (dateStr) => {
       }
     }
 
-    // If already YYYY-MM-DD
-    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      return dateStr;
+    // If DD-MM-YYYY
+    if (dateStr.includes('-') && !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [day, month, year] = dateStr.split('-');
+      if (day && month && year) {
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
     }
 
     // Try parsing as JS Date
@@ -304,4 +312,3 @@ export const convertToOracleDateString = (dateStr) => {
 
   return null;
 };
-

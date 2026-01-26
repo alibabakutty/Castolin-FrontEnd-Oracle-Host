@@ -189,19 +189,10 @@ const ViewFetchReport = ({ onBack }) => {
           created_at: order.CREATED_AT || '',
         }));
 
-        // Get unique pending orders by order_no
-        const pendingUniqueOrders = formattedOrders.reduce((acc, current) => {
-          const existingOrder = acc.find(order => order.ORDER_NO === current.ORDER_NO);
-          if (!existingOrder) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
-
-        setAllOrders(pendingUniqueOrders);
-        setFilteredOrders(pendingUniqueOrders);
+        setAllOrders(formattedOrders);
+        setFilteredOrders(formattedOrders);
         setHasFetched(true);
-        console.log('Pending orders:', pendingUniqueOrders);
+        console.log('Pending orders:', formattedOrders);
       } catch (error) {
         console.error('Error fetching orders:', error);
         setError('Failed to fetch orders');

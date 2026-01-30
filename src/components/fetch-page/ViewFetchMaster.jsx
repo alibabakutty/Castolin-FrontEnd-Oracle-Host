@@ -97,6 +97,35 @@ const ViewFetchMaster = () => {
     }
   }, []);
 
+  // Handle item click based on type
+  const handleItemClick = useCallback(
+     (item, index) => {
+    setSelectedIndex(index);
+
+    switch (type) {
+      case 'inventory':
+        // handleInventoryClick(item);
+        navigate(`/inventory-view/${item.ITEM_CODE}`);
+        break;
+      case 'customer':
+        // handleCustomerClick(item);
+        navigate(`/customer-view/${item.CUSTOMER_CODE}`);
+        break;
+      case 'distributor':
+        // handleDistributorClick(item);
+        navigate(`/distributor-view/${item.CUSTOMER_CODE}`);
+        break;
+      case 'direct':
+        // handleCorpoRATEClick(item);
+        navigate(`/corporate-view/${item.CUSTOMER_CODE}`);
+        break;
+      default:
+        break;
+    }
+  },
+  [navigate, type]
+);
+
   // Keyboard navigation handler
   useEffect(() => {
     const handleKeyDown = e => {
@@ -143,7 +172,7 @@ const ViewFetchMaster = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [filteredData, selectedIndex, navigate]);
+  }, [filteredData, selectedIndex, navigate, handleItemClick]);
 
   // Scroll to selected item
   const scrollToItem = index => {
@@ -226,44 +255,6 @@ const ViewFetchMaster = () => {
 
   const handleSearchChange = e => {
     setSearchTerm(e.target.value);
-  };
-
-  const handleInventoryClick = item => {
-    navigate(`/inventory-view/${item.ITEM_CODE}`);
-  };
-
-  const handleCustomerClick = item => {
-    navigate(`/customer-view/${item.CUSTOMER_CODE}`);
-  };
-
-  const handleDistributorClick = item => {
-    navigate(`/distributor-view/${item.CUSTOMER_CODE}`);
-  };
-
-  const handleCorpoRATEClick = item => {
-    navigate(`/corporate-view/${item.CUSTOMER_CODE}`);
-  };
-
-  // Handle item click based on type
-  const handleItemClick = (item, index) => {
-    setSelectedIndex(index);
-
-    switch (type) {
-      case 'inventory':
-        handleInventoryClick(item);
-        break;
-      case 'customer':
-        handleCustomerClick(item);
-        break;
-      case 'distributor':
-        handleDistributorClick(item);
-        break;
-      case 'direct':
-        handleCorpoRATEClick(item);
-        break;
-      default:
-        break;
-    }
   };
 
   // Render list items based on type

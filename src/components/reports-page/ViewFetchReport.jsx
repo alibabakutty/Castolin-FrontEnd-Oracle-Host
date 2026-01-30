@@ -64,6 +64,16 @@ const ViewFetchReport = ({ onBack }) => {
     });
   }, []);
 
+  // Handle order click
+  const handleOrderClick = useCallback( 
+    order => {
+    if (order.order_no) {
+      navigate(`/order-report-approved/${order.order_no}`);
+    }
+  },
+  [navigate]
+  );
+
   useEffect(() => {
     const handleKeyDown = e => {
       switch (e.key) {
@@ -122,7 +132,7 @@ const ViewFetchReport = ({ onBack }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length]);
+  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length, handleOrderClick]);
 
   // Scroll to selected row
   useEffect(() => {
@@ -232,13 +242,6 @@ const ViewFetchReport = ({ onBack }) => {
     const month = date.toLocaleString('en-IN', { month: 'short' });
     const year = date.getFullYear().toString().slice(-2);
     return `${day}-${month}-${year}`;
-  };
-
-  // Handle order click
-  const handleOrderClick = order => {
-    if (order.order_no) {
-      navigate(`/order-report-approved/${order.order_no}`);
-    }
   };
 
   // Handle cell click

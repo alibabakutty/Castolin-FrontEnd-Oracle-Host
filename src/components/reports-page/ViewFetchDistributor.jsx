@@ -17,6 +17,7 @@ const ViewFetchDistributor = ({ onBack }) => {
   const listContainerRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const currentDistributorUsername = user?.customer_name.toLowerCase() || user?.displayName.toLowerCase() || '';
 
   // Column configuration matching your existing structure
   const columns = [
@@ -65,6 +66,16 @@ const ViewFetchDistributor = ({ onBack }) => {
       );
     });
   }, []);
+
+  // Handle order click
+  const handleOrderClick = useCallback(
+     order => {
+    if (order.order_no) {
+      navigate(`/order-report-distributor/${order.order_no}`);
+    }
+  },
+  [navigate]
+  );
 
   useEffect(() => {
     const handleKeyDown = e => {
@@ -124,7 +135,7 @@ const ViewFetchDistributor = ({ onBack }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length]);
+  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length, handleOrderClick]);
 
   // Scroll to selected row
   useEffect(() => {
@@ -147,7 +158,7 @@ const ViewFetchDistributor = ({ onBack }) => {
 
   // Fetch orders
   useEffect(() => {
-    if (hasFetched) return;
+    if (hasFetched || !currentDistributorUsername) return;
 
     const fetchOrders = async () => {
       try {
@@ -191,8 +202,6 @@ const ViewFetchDistributor = ({ onBack }) => {
           created_at: order.CREATED_AT || '',
         }));
 
-        const currentDistributorUsername = user?.customer_name.toLowerCase() || user?.displayName.toLowerCase() || '';
-
         // Get unique pending orders by order_no
         const pendingUniqueOrders = formattedOrders
           .filter(
@@ -226,7 +235,7 @@ const ViewFetchDistributor = ({ onBack }) => {
     };
 
     fetchOrders();
-  }, [hasFetched]);
+  }, [hasFetched, currentDistributorUsername]);
 
   // Apply search filter when search term changes
   useEffect(() => {
@@ -254,13 +263,6 @@ const ViewFetchDistributor = ({ onBack }) => {
     const month = date.toLocaleString('en-IN', { month: 'short' });
     const year = date.getFullYear().toString().slice(-2);
     return `${day}-${month}-${year}`;
-  };
-
-  // Handle order click
-  const handleOrderClick = order => {
-    if (order.order_no) {
-      navigate(`/order-report-distributor/${order.order_no}`);
-    }
   };
 
   // Handle cell click

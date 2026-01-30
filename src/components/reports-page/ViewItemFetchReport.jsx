@@ -114,6 +114,17 @@ const ViewItemFetchReport = ({ onBack }) => {
     }
   }, [selectedRow]);
 
+  // Handle order click
+  const handleOrderClick = useCallback(
+     order => {
+    if (order.order_no) {
+      navigate(`/order-report-approved/${order.order_no}`);
+    }
+  },
+  
+  [navigate]
+  );
+
   useEffect(() => {
     const handleKeyDown = e => {
       switch (e.key) {
@@ -196,7 +207,7 @@ const ViewItemFetchReport = ({ onBack }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length]);
+  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length, handleOrderClick]);
 
   // Scroll to selected items when selection changes
   useEffect(() => {
@@ -302,12 +313,7 @@ const ViewItemFetchReport = ({ onBack }) => {
     return `${day}-${month}-${year}`;
   };
 
-  // Handle order click
-  const handleOrderClick = order => {
-    if (order.order_no) {
-      navigate(`/order-report-approved/${order.order_no}`);
-    }
-  };
+  
 
   // Handle cell click
   const handleCellClick = (rowIndex, colIndex) => {

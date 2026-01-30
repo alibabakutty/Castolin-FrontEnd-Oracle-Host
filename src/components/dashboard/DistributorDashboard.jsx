@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // import Order from '../orders-page/Order';
 import { logout } from '../../auth/auth';
@@ -13,6 +13,30 @@ const DistributorDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Logout function
+  const handleLogout = useCallback(async () => {
+    const userConfirmed = window.confirm('Are you sure you want to logout?');
+
+    if (!userConfirmed) {
+      return;
+    }
+
+    try {
+      await logout();
+      toast.success('Logged out successfully!', {
+        position: 'bottom-right',
+        autoClose: 3000,
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Error Logging out', {
+        position: 'bottom-right',
+        autoClose: 3000,
+      });
+    }
+  }, [navigate]);
+
   useEffect(() => {
     const handleEscapeKey = event => {
       if (event.key === 'Escape') {
@@ -23,7 +47,7 @@ const DistributorDashboard = () => {
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [navigate]);
+  }, [handleLogout]);
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -54,30 +78,6 @@ const DistributorDashboard = () => {
   } else if (currentPage === 'fetch-distributor') {
     return <ViewFetchDistributor onBack={() => setCurrentPage('dashboard')} />;
   }
-
-  // Logout function
-  const handleLogout = async () => {
-    const userConfirmed = window.confirm('Are you sure you want to logout?');
-
-    if (!userConfirmed) {
-      return;
-    }
-
-    try {
-      await logout();
-      toast.success('Logged out successfully!', {
-        position: 'bottom-right',
-        autoClose: 3000,
-      });
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Error Logging out', {
-        position: 'bottom-right',
-        autoClose: 3000,
-      });
-    }
-  };
 
   // Show only Dashboard
   return (

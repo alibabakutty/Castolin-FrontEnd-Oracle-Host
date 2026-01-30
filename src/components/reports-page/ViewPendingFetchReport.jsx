@@ -64,6 +64,17 @@ const ViewPendingFetchReport = ({ onBack }) => {
     });
   }, []);
 
+  // Handle order click
+  const handleOrderClick = useCallback(
+    order => {
+      if (order.order_no) {
+        navigate(`/order-report-approved/${order.order_no}`);
+      }
+    },
+
+    [navigate],
+  );
+
   useEffect(() => {
     const handleKeyDown = e => {
       switch (e.key) {
@@ -122,7 +133,7 @@ const ViewPendingFetchReport = ({ onBack }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length]);
+  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length, handleOrderClick]);
 
   // Scroll to selected row
   useEffect(() => {
@@ -245,13 +256,6 @@ const ViewPendingFetchReport = ({ onBack }) => {
     return `${day}-${month}-${year}`;
   };
 
-  // Handle order click
-  const handleOrderClick = order => {
-    if (order.order_no) {
-      navigate(`/order-report-approved/${order.order_no}`);
-    }
-  };
-
   // Handle cell click
   const handleCellClick = (rowIndex, colIndex) => {
     setSelectedRow(rowIndex);
@@ -327,8 +331,8 @@ const ViewPendingFetchReport = ({ onBack }) => {
                     isRowSelected
                       ? 'bg-yellow-100 border-yellow-300'
                       : rowIndex % 2 === 0
-                      ? 'bg-white hover:bg-blue-50'
-                      : 'bg-gray-100 hover:bg-blue-50'
+                        ? 'bg-white hover:bg-blue-50'
+                        : 'bg-gray-100 hover:bg-blue-50'
                   }`}
                   onClick={() => {
                     setSelectedRow(rowIndex);
@@ -360,8 +364,8 @@ const ViewPendingFetchReport = ({ onBack }) => {
                               column.align === 'left'
                                 ? 'text-left'
                                 : column.align === 'center'
-                                ? 'text-center'
-                                : 'text-right'
+                                  ? 'text-center'
+                                  : 'text-right'
                             }`}
                             title={getCellValue(order, column.key)}
                           >
@@ -438,8 +442,8 @@ const ViewPendingFetchReport = ({ onBack }) => {
                         column.align === 'left'
                           ? 'text-left'
                           : column.align === 'center'
-                          ? 'text-center'
-                          : 'text-right'
+                            ? 'text-center'
+                            : 'text-right'
                       }
                     >
                       {column.label}

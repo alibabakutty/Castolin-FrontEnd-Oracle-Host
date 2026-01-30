@@ -89,7 +89,7 @@ const NewOrder = ({ onBack }) => {
     // Show rows only when we have data or are in create mode
     const shouldShowRows = orderData.length > 0 || mode === 'create';
     setShowRowValueRows(shouldShowRows);
-  }, [orderData.length, mode]);
+  }, [orderData.length, mode, setShowRowValueRows]);
 
   // Fetch order details
 useEffect(() => {
@@ -157,7 +157,7 @@ useEffect(() => {
   };
 
   fetchOrderDetails();
-}, [mode, orderNumberFetch]);
+}, [mode, orderNumberFetch, setOrderData, setVoucherType, setCustomerName, setExecutiveName, setDate, setStatus, setRemarks, setDbTotals]);
 
   // Rest of your useEffect hooks remain the same
   useEffect(() => {
@@ -195,7 +195,7 @@ useEffect(() => {
     } else {
       setOrderNumber(orderNumberFetch);
     }
-  }, [mode, date, orderNumberFetch]);
+  }, [mode, date, orderNumberFetch, setOrderNumber]);
 
   // Handle customer selection
   const handleCustomerSelect = selected => {
@@ -366,7 +366,7 @@ useEffect(() => {
       totalAmount: finalTotalAmount, // Final amount after discounts and GST
       calculatedTotalAmount, // For debugging
     };
-  }, [orderData, editingRow, isTamilNaduState, mode, dbTotals]);
+  }, [orderData, editingRow, mode, dbTotals]);
 
   // Add this useEffect to debug totals changes
   useEffect(() => {
@@ -811,7 +811,7 @@ useEffect(() => {
       setDbTotals(null);
       console.log('Cleared dbTotals for dynamic calculation');
     }
-  }, [orderData, mode]);
+  }, [orderData, mode, setDbTotals]);
 
   // Debug log to check values
   useEffect(() => {

@@ -17,6 +17,7 @@ const ViewFetchCorporate = ({ onBack }) => {
   const listContainerRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const currentCorporateUsername = user?.customer_name.toLowerCase() || user?.displayName.toLowerCase() || '';
 
   // Column configuration matching your existing structure
   const columns = [
@@ -65,6 +66,16 @@ const ViewFetchCorporate = ({ onBack }) => {
       );
     });
   }, []);
+
+   // Handle order click
+  const handleOrderClick = useCallback( 
+    order => {
+    if (order.order_no) {
+      navigate(`/order-report-corporate/${order.order_no}`);
+    }
+  },
+  [navigate]
+  );
 
   useEffect(() => {
     const handleKeyDown = e => {
@@ -124,7 +135,7 @@ const ViewFetchCorporate = ({ onBack }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length]);
+  }, [filteredOrders, selectedRow, selectedCol, navigate, onBack, columns.length, handleOrderClick]);
 
   // Scroll to selected row
   useEffect(() => {
@@ -190,14 +201,12 @@ const ViewFetchCorporate = ({ onBack }) => {
           created_at: order.CREATED_AT || '',
         }));
 
-        const currentCorporateUsername = user?.customer_name.toLowerCase() || user?.displayName.toLowerCase() || '';
-
         // Get unique pending orders by order_no
         const pendingUniqueOrders = formattedOrders
           .filter(
             order => {
               const hasCorporateRole = order.role && order.role === 'direct';
-              const matchesCurrentUser = order.executive && order.executive.toLowerCase() === currentCorporateUsername;
+              const matchesCurrentUser = order.executive && order.executive?.toLowerCase() === currentCorporateUsername;
 
               return hasCorporateRole && matchesCurrentUser;
             }
@@ -225,7 +234,7 @@ const ViewFetchCorporate = ({ onBack }) => {
     };
 
     fetchOrders();
-  }, [hasFetched]);
+  }, [hasFetched, currentCorporateUsername]);
 
   // Apply search filter when search term changes
   useEffect(() => {
@@ -253,13 +262,6 @@ const ViewFetchCorporate = ({ onBack }) => {
     const month = date.toLocaleString('en-IN', { month: 'short' });
     const year = date.getFullYear().toString().slice(-2);
     return `${day}-${month}-${year}`;
-  };
-
-  // Handle order click
-  const handleOrderClick = order => {
-    if (order.order_no) {
-      navigate(`/order-report-corporate/${order.order_no}`);
-    }
   };
 
   // Handle cell click

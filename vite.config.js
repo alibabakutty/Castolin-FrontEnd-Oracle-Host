@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-  ],
+  ], 
 
   build: {
     chunkSizeWarningLimit: 1000,
@@ -20,6 +20,24 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
+    },
+  },
+
+  // 🔥 ADD THIS PART
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/test/setup.js",
+    css: true,
+
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      reportsDirectory: "coverage",
+      exclude: [
+        "node_modules/",
+        "src/test/",
+      ],
     },
   },
 });

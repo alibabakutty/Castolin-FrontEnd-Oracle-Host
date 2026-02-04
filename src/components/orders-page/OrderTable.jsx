@@ -6,11 +6,11 @@ import EditingRow from './EditingRow';
 import { formatCurrency, formatDateToDDMMYYYYSimple, validateFutureDate } from './orderUtils';
 
 const OrderTable = ({
-  orderData,
-  setOrderData,
-  editingRow,
-  setEditingRow,
-  showRowValueRows,
+  orderData = [],
+  setOrderData = () => {},
+  editingRow = {},
+  setEditingRow = () => {},
+  showRowValueRows = true,
   formResetKey,
   editingRowSelectRef,
   isTamilNaduState,
@@ -51,7 +51,10 @@ const OrderTable = ({
     ? 17
     : 17;
 
-  const visibleOrderData = orderData.filter(row => !row._deleted && !row._markedForDeletion);
+  const visibleOrderData = Array.isArray(orderData)
+  ? orderData.filter(row => !row._deleted && !row._markedForDeletion)
+  : [];
+
 
   // Helper function to check if discount columns are visible
   const showDiscountColumns = () => {

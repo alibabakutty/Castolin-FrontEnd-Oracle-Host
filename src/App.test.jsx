@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import App from "./App";
+import App from "./App.jsx";
 
 describe("App", () => {
   it("renders login selection screen", () => {

@@ -5,9 +5,21 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // ❌ Ignore build & reports
+  globalIgnores([
+    'dist',
+    'playwright-report',
+    'test-results',
+    'coverage',
+  ]),
+
+  // 🌐 Browser / React source files
   {
     files: ['**/*.{js,jsx}'],
+    ignores: [
+      'playwright.config.js',
+      'vite.config.js',
+    ],
     extends: [
       js.configs.recommended,
       reactHooks.configs['recommended-latest'],
@@ -24,6 +36,37 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+
+  // 🧪 Vitest + MSW + setup.js
+  {
+    files: [
+      '**/*.test.{js,jsx}',
+      '**/*.spec.{js,jsx}',
+      '**/test/**/*.{js,jsx}',
+      '**/__tests__/**/*.{js,jsx}'
+    ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.vitest
+      }
+    }
+  },
+
+  // ⚙️ Node config files
+  {
+    files: [
+      'playwright.config.js',
+      'vite.config.js',
+      '*.config.js'
+    ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: globals.node,
     },
   },
 ])

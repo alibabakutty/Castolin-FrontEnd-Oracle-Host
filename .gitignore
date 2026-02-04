@@ -22,3 +22,43 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ============================================
+# TESTING SPECIFIC FOR YOUR PROJECT
+# ============================================
+
+# Vitest/V8 specific
+.vitest/
+.vitest-cache/
+coverage/
+.nyc_output/
+
+# Playwright artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+playwright/.screenshots/
+
+# Test generated files
+**/public/mockServiceWorker.js
+
+# Test environment files
+.env.test
+.env.e2e
+.env.coverage
+
+# Test data files
+**/*.test.data.json
+**/*.test.fixtures.json
+
+# Mock files that should be generated
+**/__mocks__/generated/
+**/test/mocks/generated/
+
+# Test video/screenshots
+**/__screenshots__/
+**/__videos__/
+
+# Temporary test files
+**/__temp__/
+**/tmp/

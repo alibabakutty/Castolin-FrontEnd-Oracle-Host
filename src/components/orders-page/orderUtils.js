@@ -48,39 +48,32 @@ export const formatCurrency = value => {
 export const formatDateToDDMMYYYYSimple = dateStr => {
   if (!dateStr || typeof dateStr !== 'string') return '';
 
-  const cleanedStr = dateStr.trim();
+  const trimmed = dateStr.trim();
 
-  if (/^\d{2}-\d{2}-\d{4}$/.test(cleanedStr)) {
-    return cleanedStr;
+  // Already DD-MM-YYYY
+  if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
+    return trimmed;
   }
 
-  const numbers = cleanedStr.match(/\d+/g);
-  if (!numbers || numbers.length < 3) return cleanedStr;
-
-  let day, month, year;
-
-  if (numbers[2].length === 2) {
-    const shortYear = parseInt(numbers[2]);
-    year = shortYear < 50 ? 2000 + shortYear : 1900 + shortYear;
-  } else if (numbers[2].length === 4) {
-    year === numbers[2];
-  } else {
-    return cleanedStr;
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [year, month, day] = trimmed.split('-');
+    return `${day}-${month}-${year}`;
   }
 
-  if (parseInt(numbers[0]) <= 31 && parseInt(numbers[1]) <= 12) {
-    day = numbers[0];
-    month = numbers[1];
-  } else if (parseInt(numbers[0]) <= 12 && parseInt(numbers[1]) <= 31) {
-    day = numbers[1];
-    month = numbers[0];
-  } else {
-    day = numbers[0];
-    month = numbers[1];
+  // DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+    const [day, month, year] = trimmed.split('/');
+    return `${day}-${month}-${year}`;
   }
 
-  day = day.padStart(2, '0');
-  month = month.padStart(2, '0');
+  // Fallback: try Date parsing
+  const d = new Date(trimmed);
+  if (isNaN(d)) return '';
+
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
 
   return `${day}-${month}-${year}`;
 };
@@ -312,3 +305,5 @@ export const convertToOracleDateString = (dateStr) => {
 
   return null;
 };
+
+

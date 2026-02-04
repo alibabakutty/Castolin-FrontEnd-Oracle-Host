@@ -60,7 +60,7 @@ const DistributorAuthForm = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-5 shadow-2xl">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-label="distributor-login-form">
           {/* Header */}
           <div className="text-center">
             <h3 className="text-xl font-amasis text-white">

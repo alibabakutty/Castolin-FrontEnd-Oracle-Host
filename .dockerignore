@@ -1,0 +1,31 @@
+# Node
+node_modules
+npm-debug.log
+yarn.lock
+pnpm-lock.yaml
+
+# Vite / React build
+dist
+.vite
+
+# Env files (VERY IMPORTANT)
+.env
+.env.*
+*.local
+
+# Git
+.git
+.gitignore
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# IDE
+.vscode
+.idea
+*.swp

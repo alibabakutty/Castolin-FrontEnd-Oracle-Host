@@ -29,11 +29,12 @@ const normalizeUser = (d) => {
   if (!d) return null;
   return {
     id: d.ID ?? d.id,
-    username: d.USERNAME ?? d.username,
+    username: d.USERNAME ?? d.username ?? d.CUSTOMER_NAME,
     email: d.EMAIL ?? d.email,
     role: d.ROLE ?? d.role,
     customer_name: d.CUSTOMER_NAME ?? d.customer_name,
     customer_code: d.CUSTOMER_CODE ?? d.customer_code,
+    state: d.STATE ?? d.state,
     firebase_uid: d.FIREBASE_UID ?? d.firebase_uid,
   };
 };
@@ -53,8 +54,7 @@ const clearSession = () => {
 /* ===================== CONTEXT ===================== */
 
 const ContextProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [distributorUser, setDistributorUser] = useState(null);
+  const [user, setUser] = useState(null);        // ✅ LOGGED IN USER (ALL ROLES)
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSigningUp, setIsSigningUp] = useState(false);
@@ -69,7 +69,6 @@ const ContextProvider = ({ children }) => {
         clearSession();
         setUser(null);
         setRole(null);
-        setDistributorUser(null);
         setLoading(false);
         return;
       }
@@ -93,17 +92,17 @@ const ContextProvider = ({ children }) => {
         setUser({
           ...firebaseUser,
           role: userData.role,
-          username: userData.username || userData.customer_name,
-          id: userData.id || userData.customer_code,
+          username: userData.username,
+          id: userData.id,
           email: userData.email,
-          _userData: userData,
+          _userData: userData, // ✅ FULL BACKEND PROFILE
         });
 
         setRole(userData.role);
-        setDistributorUser(userType === 'distributor' ? userData : null);
       } catch (err) {
         clearSession();
         setUser(null);
+        setRole(null);
       }
 
       setLoading(false);
@@ -135,14 +134,13 @@ const ContextProvider = ({ children }) => {
       setUser({
         ...firebaseUser,
         role: userData.role,
-        username: userData.username || userData.customer_name,
-        id: userData.id || userData.customer_code,
+        username: userData.username,
+        id: userData.id,
         email: userData.email,
         _userData: userData,
       });
 
       setRole(userData.role);
-      setDistributorUser(userType === 'distributor' ? userData : null);
 
       return { success: true, role: userData.role, userData };
     } catch (error) {
@@ -206,48 +204,13 @@ const ContextProvider = ({ children }) => {
     }
   };
 
-  /* ===================== CREATE DISTRIBUTOR ===================== */
-
-  const createDistributorFirebaseAccount = async (
-    usercode,
-    updates,
-    email,
-    password
-  ) => {
-    try {
-      const { user } = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const token = await user.getIdToken();
-
-      await api.put(
-        `/distributors/${usercode}`,
-        {
-          ...updates,
-          firebase_uid: user.uid,
-          email,
-          status: 'active',
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      await signOut(auth);
-      await loginAdmin('admin123@gmail.com', '12345678');
-
-      return { success: true };
-    } catch (err) {
-      if (auth.currentUser) await auth.currentUser.delete();
-      return { success: false, message: err.message };
-    }
-  };
-
   /* ===================== LOGOUT ===================== */
 
   const logout = async () => {
     clearSession();
     await signOut(auth);
+    setUser(null);
+    setRole(null);
   };
 
   /* ===================== PROVIDER ===================== */
@@ -255,15 +218,13 @@ const ContextProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        role,
-        distributorUser,
+        user,      // ✅ ALWAYS USE THIS
+        role,      // ✅ ALWAYS USE THIS
         loading,
         loginAdmin,
         loginDistributor,
         loginCorporate,
         signup,
-        createDistributorFirebaseAccount,
         logout,
       }}
     >
